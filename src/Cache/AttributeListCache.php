@@ -38,14 +38,14 @@ class AttributeListCache implements CacheInterface
     public function get(string $key, mixed $default = null): mixed
     {
         $this->validateKey($key);
-        
+
         if (!isset($this->cache[$key])) {
             return $default;
         }
 
         // Update access time for LRU
         $this->accessTimes[$key] = ++$this->accessCounter;
-        
+
         return $this->cache[$key];
     }
 
@@ -61,7 +61,7 @@ class AttributeListCache implements CacheInterface
     public function set(string $key, mixed $value, null|int|\DateInterval $ttl = null): bool
     {
         $this->validateKey($key);
-        
+
         // Ensure we don't exceed max size
         if (count($this->cache) >= $this->maxSize && !isset($this->cache[$key])) {
             $this->evictLeastRecentlyUsed();
@@ -82,7 +82,7 @@ class AttributeListCache implements CacheInterface
     public function delete(string $key): bool
     {
         $this->validateKey($key);
-        
+
         $existed = isset($this->cache[$key]);
         unset($this->cache[$key]);
         unset($this->accessTimes[$key]);
@@ -113,7 +113,7 @@ class AttributeListCache implements CacheInterface
             'size' => count($this->cache),
             'max_size' => $this->maxSize,
             'access_counter' => $this->accessCounter,
-            'hit_ratio' => $this->calculateHitRatio()
+            'hit_ratio' => $this->calculateHitRatio(),
         ];
     }
 
@@ -222,7 +222,7 @@ class AttributeListCache implements CacheInterface
     public function putByNames(array $attributeNames, array $attributeList): int
     {
         $nameHash = $this->hashAttributeNames($attributeNames);
-        
+
         // Check if we already have this combination
         $existingId = $this->getIdByNameHash($nameHash);
         if ($existingId !== null) {
@@ -231,13 +231,13 @@ class AttributeListCache implements CacheInterface
 
         // Generate new ID
         $attributeListId = $this->generateId();
-        
+
         // Add name hash to attribute list for reverse lookup
         $attributeList['name_hash'] = $nameHash;
         $attributeList['attribute_names'] = $attributeNames;
-        
+
         $this->put($attributeListId, $attributeList);
-        
+
         return $attributeListId;
     }
 
@@ -249,7 +249,7 @@ class AttributeListCache implements CacheInterface
      */
     public function put(int $attributeListId, array $attributeList): void
     {
-        $this->set((string)$attributeListId, $attributeList);
+        $this->set((string) $attributeListId, $attributeList);
     }
 
     /**
@@ -259,7 +259,7 @@ class AttributeListCache implements CacheInterface
      */
     public function remove(int $attributeListId): void
     {
-        $this->delete((string)$attributeListId);
+        $this->delete((string) $attributeListId);
     }
 
     /**
@@ -271,11 +271,11 @@ class AttributeListCache implements CacheInterface
     private function validateKey(string $key): void
     {
         if ($key === '') {
-            throw new class('Cache key cannot be empty') extends \InvalidArgumentException implements InvalidArgumentException {};
+            throw new class ('Cache key cannot be empty') extends \InvalidArgumentException implements InvalidArgumentException {};
         }
-        
+
         if (preg_match('/[{}()\/@:]/', $key)) {
-            throw new class('Cache key contains reserved characters') extends \InvalidArgumentException implements InvalidArgumentException {};
+            throw new class ('Cache key contains reserved characters') extends \InvalidArgumentException implements InvalidArgumentException {};
         }
     }
 
@@ -289,7 +289,7 @@ class AttributeListCache implements CacheInterface
         }
 
         $lruId = array_keys($this->accessTimes, min($this->accessTimes))[0];
-        $this->delete((string)$lruId);
+        $this->delete((string) $lruId);
     }
 
     /**

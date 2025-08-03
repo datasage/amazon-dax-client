@@ -28,7 +28,7 @@ class DaxException extends Exception
         int $code = 0,
         ?Exception $previous = null,
         ?string $errorCode = null,
-        ?string $requestId = null
+        ?string $requestId = null,
     ) {
         parent::__construct($message, $code, $previous);
         $this->errorCode = $errorCode;

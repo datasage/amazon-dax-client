@@ -30,7 +30,7 @@ class ConnectionPool
             'max_pending_connections_per_host' => 10,
             'max_concurrent_requests_per_connection' => 1000,
             'idle_timeout' => 30000,
-            'skip_hostname_verification' => false
+            'skip_hostname_verification' => false,
         ], $config);
     }
 
@@ -81,7 +81,7 @@ class ConnectionPool
     {
         $connectionId = spl_object_hash($connection);
         $this->badConnections[$connectionId] = time();
-        
+
         // Remove from active connections
         foreach ($this->connections as $key => &$connectionList) {
             foreach ($connectionList as $index => $conn) {
@@ -135,13 +135,13 @@ class ConnectionPool
         try {
             $connection = new DaxConnection($endpoint, $this->config);
             $connection->connect();
-            
+
             // Add to connection pool
             if (!isset($this->connections[$key])) {
                 $this->connections[$key] = [];
             }
             $this->connections[$key][] = $connection;
-            
+
             return $connection;
         } catch (\Exception $e) {
             throw new DaxException("Failed to create connection to {$endpoint['host']}:{$endpoint['port']}: " . $e->getMessage(), 0, $e);
@@ -171,7 +171,7 @@ class ConnectionPool
     private function isConnectionHealthy(DaxConnection $connection): bool
     {
         $connectionId = spl_object_hash($connection);
-        
+
         // Check if marked as bad recently
         if (isset($this->badConnections[$connectionId])) {
             $badTime = $this->badConnections[$connectionId];

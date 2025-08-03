@@ -50,29 +50,29 @@ class ClusterManager
     {
         if ($this->closed) {
             $this->logger->error('Attempted to execute request on closed ClusterManager', [
-                'operation' => $operation
+                'operation' => $operation,
             ]);
             throw new DaxException('ClusterManager has been closed');
         }
 
         $this->logger->debug('Executing DAX request', [
             'operation' => $operation,
-            'request_keys' => array_keys($request)
+            'request_keys' => array_keys($request),
         ]);
 
         $connection = $this->connectionPool->getConnection();
-        
+
         try {
             $result = $this->protocol->executeRequest($connection, $operation, $request);
             $this->logger->debug('DAX request completed successfully', [
-                'operation' => $operation
+                'operation' => $operation,
             ]);
             return $result;
         } catch (\Exception $e) {
             $this->logger->warning('DAX request failed, marking connection as bad', [
                 'operation' => $operation,
                 'error' => $e->getMessage(),
-                'connection' => spl_object_hash($connection)
+                'connection' => spl_object_hash($connection),
             ]);
             // Mark connection as potentially bad and retry with a different one
             $this->connectionPool->markConnectionBad($connection);
@@ -104,22 +104,22 @@ class ClusterManager
     {
         $this->logger->info('Initializing DAX cluster manager', [
             'endpoints_count' => count($this->config['endpoints'] ?? []),
-            'region' => $this->config['region'] ?? 'unknown'
+            'region' => $this->config['region'] ?? 'unknown',
         ]);
-        
+
         try {
             $this->parseEndpoints();
             $this->initializeCaches();
             $this->initializeProtocol();
             $this->initializeConnectionPool();
             $this->discoverCluster();
-            
+
             $this->logger->info('DAX cluster manager initialized successfully', [
-                'endpoints_count' => count($this->endpoints)
+                'endpoints_count' => count($this->endpoints),
             ]);
         } catch (\Exception $e) {
             $this->logger->error('Failed to initialize DAX cluster manager', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -151,7 +151,7 @@ class ClusterManager
     private function parseEndpoint(string $endpointUrl): array
     {
         $parsed = parse_url($endpointUrl);
-        
+
         if ($parsed === false) {
             throw new DaxException("Invalid endpoint URL: {$endpointUrl}");
         }
@@ -177,7 +177,7 @@ class ClusterManager
             'scheme' => $scheme,
             'host' => $host,
             'port' => $port,
-            'ssl' => $scheme === 'daxs'
+            'ssl' => $scheme === 'daxs',
         ];
     }
 
@@ -188,11 +188,11 @@ class ClusterManager
     {
         $this->keySchemaCache = new KeySchemaCache(
             $this->config['key_cache_size'] ?? 1000,
-            $this->config['key_cache_ttl'] ?? 60000
+            $this->config['key_cache_ttl'] ?? 60000,
         );
-        
+
         $this->attributeListCache = new AttributeListCache(
-            $this->config['attr_cache_size'] ?? 1000
+            $this->config['attr_cache_size'] ?? 1000,
         );
     }
 
@@ -205,7 +205,7 @@ class ClusterManager
             'region' => $this->config['region'],
             'credentials' => $this->config['credentials'],
             'key_schema_cache' => $this->keySchemaCache,
-            'attribute_list_cache' => $this->attributeListCache
+            'attribute_list_cache' => $this->attributeListCache,
         ]);
     }
 
@@ -221,7 +221,7 @@ class ClusterManager
             'max_pending_connections_per_host' => $this->config['max_pending_connections_per_host'],
             'max_concurrent_requests_per_connection' => $this->config['max_concurrent_requests_per_connection'],
             'idle_timeout' => $this->config['idle_timeout'],
-            'skip_hostname_verification' => $this->config['skip_hostname_verification']
+            'skip_hostname_verification' => $this->config['skip_hostname_verification'],
         ]);
     }
 
@@ -235,7 +235,7 @@ class ClusterManager
         // For now, use the configured endpoints
         // In a full implementation, this would query the cluster discovery endpoint
         // to get the actual cluster node endpoints
-        
+
         foreach ($this->endpoints as $endpoint) {
             $this->connectionPool->addEndpoint($endpoint);
         }

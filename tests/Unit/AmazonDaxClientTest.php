@@ -17,7 +17,7 @@ class AmazonDaxClientTest extends TestCase
     {
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
-            'region' => 'us-east-1'
+            'region' => 'us-east-1',
         ];
 
         $client = new AmazonDaxClient($config);
@@ -28,7 +28,7 @@ class AmazonDaxClientTest extends TestCase
     {
         $config = [
             'endpoints' => ['dax://node1.cluster.dax-clusters.us-east-1.amazonaws.com'],
-            'region' => 'us-east-1'
+            'region' => 'us-east-1',
         ];
 
         $client = new AmazonDaxClient($config);
@@ -51,7 +51,7 @@ class AmazonDaxClientTest extends TestCase
         new AmazonDaxClient([
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
             'endpoints' => ['dax://node1.cluster.dax-clusters.us-east-1.amazonaws.com'],
-            'region' => 'us-east-1'
+            'region' => 'us-east-1',
         ]);
     }
 
@@ -59,7 +59,7 @@ class AmazonDaxClientTest extends TestCase
     {
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
-            'region' => 'us-east-1'
+            'region' => 'us-east-1',
         ];
 
         $client = AmazonDaxClient::factory($config);
@@ -70,7 +70,7 @@ class AmazonDaxClientTest extends TestCase
     {
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
-            'region' => 'us-east-1'
+            'region' => 'us-east-1',
         ];
 
         $client = new AmazonDaxClient($config);
@@ -86,7 +86,7 @@ class AmazonDaxClientTest extends TestCase
     {
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
-            'region' => 'us-east-1'
+            'region' => 'us-east-1',
         ];
 
         $client = new AmazonDaxClient($config);
@@ -102,7 +102,7 @@ class AmazonDaxClientTest extends TestCase
     {
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
-            'region' => 'us-east-1'
+            'region' => 'us-east-1',
         ];
 
         $client = new AmazonDaxClient($config);
@@ -118,7 +118,7 @@ class AmazonDaxClientTest extends TestCase
     {
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
-            'region' => 'us-east-1'
+            'region' => 'us-east-1',
         ];
 
         $client = new AmazonDaxClient($config);
@@ -134,7 +134,7 @@ class AmazonDaxClientTest extends TestCase
     {
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
-            'region' => 'us-east-1'
+            'region' => 'us-east-1',
         ];
 
         $client = new AmazonDaxClient($config);
@@ -150,7 +150,7 @@ class AmazonDaxClientTest extends TestCase
     {
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
-            'region' => 'us-east-1'
+            'region' => 'us-east-1',
         ];
 
         $client = new AmazonDaxClient($config);
@@ -166,7 +166,7 @@ class AmazonDaxClientTest extends TestCase
     {
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
-            'region' => 'us-east-1'
+            'region' => 'us-east-1',
         ];
 
         $client = new AmazonDaxClient($config);
@@ -182,7 +182,7 @@ class AmazonDaxClientTest extends TestCase
     {
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
-            'region' => 'us-east-1'
+            'region' => 'us-east-1',
         ];
 
         $client = new AmazonDaxClient($config);
@@ -198,7 +198,7 @@ class AmazonDaxClientTest extends TestCase
     {
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
-            'region' => 'us-east-1'
+            'region' => 'us-east-1',
         ];
 
         $client = new AmazonDaxClient($config);
@@ -211,7 +211,7 @@ class AmazonDaxClientTest extends TestCase
     public function testDefaultConfiguration(): void
     {
         $config = [
-            'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com'
+            'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
         ];
 
         $client = new AmazonDaxClient($config);

@@ -24,7 +24,7 @@ class KeySchemaCacheTest extends TestCase
         $tableName = 'TestTable';
         $keySchema = [
             'HashKeyElement' => ['AttributeName' => 'id', 'AttributeType' => 'S'],
-            'RangeKeyElement' => ['AttributeName' => 'sort', 'AttributeType' => 'N']
+            'RangeKeyElement' => ['AttributeName' => 'sort', 'AttributeType' => 'N'],
         ];
 
         $this->cache->put($tableName, $keySchema);
@@ -45,7 +45,7 @@ class KeySchemaCacheTest extends TestCase
         $keySchema = ['HashKeyElement' => ['AttributeName' => 'id', 'AttributeType' => 'S']];
 
         $this->assertFalse($this->cache->has($tableName));
-        
+
         $this->cache->put($tableName, $keySchema);
         $this->assertTrue($this->cache->has($tableName));
     }

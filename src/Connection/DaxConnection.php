@@ -47,7 +47,7 @@ class DaxConnection
         $ssl = $this->endpoint['ssl'] ?? false;
 
         $context = stream_context_create();
-        
+
         if ($ssl) {
             stream_context_set_option($context, 'ssl', 'verify_peer', !$this->config['skip_hostname_verification']);
             stream_context_set_option($context, 'ssl', 'verify_peer_name', !$this->config['skip_hostname_verification']);
@@ -55,16 +55,16 @@ class DaxConnection
 
         $protocol = $ssl ? 'ssl' : 'tcp';
         $address = "{$protocol}://{$host}:{$port}";
-        
+
         $timeout = $this->config['connect_timeout'] / 1000; // Convert to seconds
-        
+
         $this->socket = stream_socket_client(
             $address,
             $errno,
             $errstr,
             $timeout,
             STREAM_CLIENT_CONNECT,
-            $context
+            $context,
         );
 
         if ($this->socket === false) {
@@ -72,7 +72,7 @@ class DaxConnection
         }
 
         // Set socket options
-        stream_set_timeout($this->socket, (int)($this->config['request_timeout'] / 1000));
+        stream_set_timeout($this->socket, (int) ($this->config['request_timeout'] / 1000));
         stream_set_blocking($this->socket, true);
 
         $this->connected = true;
@@ -204,7 +204,7 @@ class DaxConnection
             $data .= $char;
 
             // Check if we've found the delimiter
-            if (strlen($data) >= $delimiterLength && 
+            if (strlen($data) >= $delimiterLength &&
                 substr($data, -$delimiterLength) === $delimiter) {
                 $this->lastActivity = time();
                 return substr($data, 0, -$delimiterLength);
@@ -228,7 +228,7 @@ class DaxConnection
             'connected' => $this->connected,
             'last_activity' => $this->lastActivity,
             'request_count' => $this->requestCount,
-            'idle_time' => (time() - $this->lastActivity) * 1000
+            'idle_time' => (time() - $this->lastActivity) * 1000,
         ];
     }
 

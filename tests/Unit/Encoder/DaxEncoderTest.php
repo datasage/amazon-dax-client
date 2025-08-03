@@ -34,17 +34,17 @@ class DaxEncoderTest extends TestCase
     {
         $methodId = 123;
         $request = ['key' => 'value'];
-        
+
         $result = $this->encoder->encodeRequest($methodId, $request);
-        
+
         // Check that result starts with method ID and length
         $this->assertIsString($result);
         $this->assertGreaterThan(8, strlen($result)); // At least header (8 bytes) + payload
-        
+
         // Verify header format: [method_id:4][length:4][payload]
         $header = substr($result, 0, 8);
         $headerData = unpack('Nmethod_id/Nlength', $header);
-        
+
         $this->assertEquals($methodId, $headerData['method_id']);
         $this->assertEquals(strlen($result) - 8, $headerData['length']);
     }
@@ -53,22 +53,22 @@ class DaxEncoderTest extends TestCase
     {
         $this->expectException(DaxException::class);
         $this->expectExceptionMessage('Failed to encode request');
-        
+
         // Create a mock that will throw an exception
         $encoder = $this->getMockBuilder(DaxEncoder::class)
             ->onlyMethods(['arrayToCborObject'])
             ->getMock();
-        
+
         $encoder->method('arrayToCborObject')
             ->willThrowException(new \Exception('Test exception'));
-        
+
         $encoder->encodeRequest(123, ['test']);
     }
 
     public function testArrayToCborObjectWithString(): void
     {
         $result = $this->encoder->arrayToCborObject('test string');
-        
+
         $this->assertInstanceOf(TextStringObject::class, $result);
         $this->assertEquals('test string', $result->getValue());
     }
@@ -76,7 +76,7 @@ class DaxEncoderTest extends TestCase
     public function testArrayToCborObjectWithPositiveInteger(): void
     {
         $result = $this->encoder->arrayToCborObject(42);
-        
+
         $this->assertInstanceOf(UnsignedIntegerObject::class, $result);
         $this->assertEquals(42, $result->getValue());
     }
@@ -84,7 +84,7 @@ class DaxEncoderTest extends TestCase
     public function testArrayToCborObjectWithNegativeInteger(): void
     {
         $result = $this->encoder->arrayToCborObject(-42);
-        
+
         $this->assertInstanceOf(NegativeIntegerObject::class, $result);
         $this->assertEquals(-42, $result->getValue());
     }
@@ -92,7 +92,7 @@ class DaxEncoderTest extends TestCase
     public function testArrayToCborObjectWithZero(): void
     {
         $result = $this->encoder->arrayToCborObject(0);
-        
+
         $this->assertInstanceOf(UnsignedIntegerObject::class, $result);
         $this->assertEquals(0, $result->getValue());
     }
@@ -100,28 +100,28 @@ class DaxEncoderTest extends TestCase
     public function testArrayToCborObjectWithTrue(): void
     {
         $result = $this->encoder->arrayToCborObject(true);
-        
+
         $this->assertInstanceOf(TrueObject::class, $result);
     }
 
     public function testArrayToCborObjectWithFalse(): void
     {
         $result = $this->encoder->arrayToCborObject(false);
-        
+
         $this->assertInstanceOf(FalseObject::class, $result);
     }
 
     public function testArrayToCborObjectWithNull(): void
     {
         $result = $this->encoder->arrayToCborObject(null);
-        
+
         $this->assertInstanceOf(NullObject::class, $result);
     }
 
     public function testArrayToCborObjectWithFloat(): void
     {
         $result = $this->encoder->arrayToCborObject(3.14);
-        
+
         $this->assertInstanceOf(TextStringObject::class, $result);
         $this->assertEquals('3.14', $result->getValue());
     }
@@ -130,15 +130,15 @@ class DaxEncoderTest extends TestCase
     {
         $data = ['item1', 'item2', 'item3'];
         $result = $this->encoder->arrayToCborObject($data);
-        
+
         $this->assertInstanceOf(ListObject::class, $result);
-        
+
         // Convert to array to check contents
         $items = [];
         foreach ($result as $item) {
             $items[] = $item;
         }
-        
+
         $this->assertCount(3, $items);
         $this->assertInstanceOf(TextStringObject::class, $items[0]);
         $this->assertEquals('item1', $items[0]->getValue());
@@ -148,9 +148,9 @@ class DaxEncoderTest extends TestCase
     {
         $data = ['key1' => 'value1', 'key2' => 'value2'];
         $result = $this->encoder->arrayToCborObject($data);
-        
+
         $this->assertInstanceOf(MapObject::class, $result);
-        
+
         // Convert to array to check contents
         $items = [];
         foreach ($result as $mapItem) {
@@ -158,16 +158,16 @@ class DaxEncoderTest extends TestCase
             $value = $mapItem->getValue()->getValue();
             $items[$key] = $value;
         }
-        
+
         $this->assertEquals(['key1' => 'value1', 'key2' => 'value2'], $items);
     }
 
     public function testArrayToCborObjectWithEmptyArray(): void
     {
         $result = $this->encoder->arrayToCborObject([]);
-        
+
         $this->assertInstanceOf(ListObject::class, $result);
-        
+
         $count = 0;
         foreach ($result as $item) {
             $count++;
@@ -179,12 +179,12 @@ class DaxEncoderTest extends TestCase
     {
         $data = [
             'nested' => [
-                'inner' => 'value'
-            ]
+                'inner' => 'value',
+            ],
         ];
-        
+
         $result = $this->encoder->arrayToCborObject($data);
-        
+
         $this->assertInstanceOf(MapObject::class, $result);
     }
 
@@ -192,7 +192,7 @@ class DaxEncoderTest extends TestCase
     {
         $data = ['SS' => ['string1', 'string2', 'string3']];
         $result = $this->encoder->arrayToCborObject($data);
-        
+
         $this->assertInstanceOf(GenericTag::class, $result);
         // GenericTag doesn't have getTag() method, but we can verify it's a tagged object
         $this->assertInstanceOf(ListObject::class, $result->getValue());
@@ -202,7 +202,7 @@ class DaxEncoderTest extends TestCase
     {
         $data = ['NS' => ['1', '2', '3']];
         $result = $this->encoder->arrayToCborObject($data);
-        
+
         $this->assertInstanceOf(GenericTag::class, $result);
         // GenericTag doesn't have getTag() method, but we can verify it's a tagged object
         $this->assertInstanceOf(ListObject::class, $result->getValue());
@@ -212,7 +212,7 @@ class DaxEncoderTest extends TestCase
     {
         $data = ['BS' => ['binary1', 'binary2']];
         $result = $this->encoder->arrayToCborObject($data);
-        
+
         $this->assertInstanceOf(GenericTag::class, $result);
         // GenericTag doesn't have getTag() method, but we can verify it's a tagged object
         $this->assertInstanceOf(ListObject::class, $result->getValue());
@@ -222,12 +222,12 @@ class DaxEncoderTest extends TestCase
     {
         $this->expectException(DaxException::class);
         $this->expectExceptionMessage('Unknown DynamoDB set type: XS');
-        
+
         // Use reflection to test the private encodeDynamoDbSet method directly
         $reflection = new \ReflectionClass($this->encoder);
         $method = $reflection->getMethod('encodeDynamoDbSet');
         $method->setAccessible(true);
-        
+
         $data = ['XS' => ['value1', 'value2']];
         $method->invoke($this->encoder, $data);
     }
@@ -236,7 +236,7 @@ class DaxEncoderTest extends TestCase
     {
         $data = ['NotASet' => ['value1', 'value2']];
         $result = $this->encoder->arrayToCborObject($data);
-        
+
         // Should be treated as regular associative array, not a set
         $this->assertInstanceOf(MapObject::class, $result);
     }
@@ -245,7 +245,7 @@ class DaxEncoderTest extends TestCase
     {
         $data = ['SS' => ['string1'], 'NS' => ['1']];
         $result = $this->encoder->arrayToCborObject($data);
-        
+
         // Should be treated as regular associative array since it has multiple keys
         $this->assertInstanceOf(MapObject::class, $result);
     }
@@ -255,7 +255,7 @@ class DaxEncoderTest extends TestCase
         $resource = fopen('php://memory', 'r');
         $result = $this->encoder->arrayToCborObject($resource);
         fclose($resource);
-        
+
         // Should fallback to string representation
         $this->assertInstanceOf(TextStringObject::class, $result);
     }
@@ -264,9 +264,9 @@ class DaxEncoderTest extends TestCase
     {
         $object = new \stdClass();
         $object->property = 'value';
-        
+
         $result = $this->encoder->arrayToCborObject($object);
-        
+
         // Should fallback to JSON string representation
         $this->assertInstanceOf(TextStringObject::class, $result);
         $this->assertEquals('{"property":"value"}', $result->getValue());
@@ -280,7 +280,7 @@ class DaxEncoderTest extends TestCase
         // Test with SS set (tag 258)
         $data = ['SS' => ['test']];
         $result = $this->encoder->arrayToCborObject($data);
-        
+
         $this->assertInstanceOf(GenericTag::class, $result);
         // GenericTag doesn't have getTag() method, but we can verify it's a tagged object
         $this->assertInstanceOf(ListObject::class, $result->getValue());
@@ -292,7 +292,7 @@ class DaxEncoderTest extends TestCase
         // through the public methods that use it
         $data = ['SS' => ['test']];
         $result = $this->encoder->arrayToCborObject($data);
-        
+
         $this->assertInstanceOf(GenericTag::class, $result);
     }
 
@@ -302,7 +302,7 @@ class DaxEncoderTest extends TestCase
             'TableName' => 'TestTable',
             'Key' => [
                 'id' => ['S' => 'test-id'],
-                'sort' => ['N' => '123']
+                'sort' => ['N' => '123'],
             ],
             'Item' => [
                 'name' => ['S' => 'Test Name'],
@@ -312,14 +312,14 @@ class DaxEncoderTest extends TestCase
                 'metadata' => [
                     'M' => [
                         'created' => ['S' => '2023-01-01'],
-                        'version' => ['N' => '1']
-                    ]
-                ]
-            ]
+                        'version' => ['N' => '1'],
+                    ],
+                ],
+            ],
         ];
-        
+
         $result = $this->encoder->arrayToCborObject($data);
-        
+
         $this->assertInstanceOf(MapObject::class, $result);
     }
 
@@ -329,19 +329,19 @@ class DaxEncoderTest extends TestCase
         $request = [
             'TableName' => 'TestTable',
             'Key' => [
-                'id' => ['S' => 'test-id']
-            ]
+                'id' => ['S' => 'test-id'],
+            ],
         ];
-        
+
         $result = $this->encoder->encodeRequest($methodId, $request);
-        
+
         $this->assertIsString($result);
         $this->assertGreaterThan(8, strlen($result));
-        
+
         // Verify header
         $header = substr($result, 0, 8);
         $headerData = unpack('Nmethod_id/Nlength', $header);
-        
+
         $this->assertEquals($methodId, $headerData['method_id']);
         $this->assertEquals(strlen($result) - 8, $headerData['length']);
     }

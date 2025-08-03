@@ -18,7 +18,7 @@ use CBOR\Tag\GenericTag;
 
 /**
  * DAX Protocol Encoder
- * 
+ *
  * Handles encoding of requests and data structures for DAX protocol communication
  */
 class DaxEncoder
@@ -42,7 +42,7 @@ class DaxEncoder
             // Convert PHP array to CBOR object and encode
             $cborObject = $this->arrayToCborObject($request);
             $payload = (string) $cborObject;
-            
+
             // DAX protocol: [method_id:4][length:4][payload]
             return pack('NN', $methodId, strlen($payload)) . $payload;
         } catch (\Exception $e) {
@@ -63,7 +63,7 @@ class DaxEncoder
             if ($this->isDynamoDbSet($data)) {
                 return $this->encodeDynamoDbSet($data);
             }
-            
+
             // Check if it's an associative array (map) or indexed array (list)
             // Handle empty array as ListObject
             if (empty($data) || array_keys($data) === range(0, count($data) - 1)) {
@@ -114,7 +114,7 @@ class DaxEncoder
         if (count($data) !== 1) {
             return false;
         }
-        
+
         $type = array_keys($data)[0];
         return in_array($type, ['SS', 'NS', 'BS']);
     }
@@ -129,7 +129,7 @@ class DaxEncoder
     {
         $type = array_keys($data)[0];
         $values = $data[$type];
-        
+
         // Determine the appropriate tag
         switch ($type) {
             case 'SS':
@@ -144,17 +144,17 @@ class DaxEncoder
             default:
                 throw new DaxException("Unknown DynamoDB set type: {$type}");
         }
-        
+
         // Create a list of the set values
         $listObject = ListObject::create();
         foreach ($values as $value) {
             $listObject->add($this->arrayToCborObject($value));
         }
-        
+
         // Create a generic tag with the appropriate tag number
         // Manually determine components to avoid hex2bin issues
         [$additionalInformation, $data] = $this->determineTagComponents($tag);
-        
+
         return new GenericTag($additionalInformation, $data, $listObject);
     }
 
@@ -169,7 +169,7 @@ class DaxEncoder
         if ($tag < 0) {
             throw new DaxException('Tag value must be a positive integer.');
         }
-        
+
         if ($tag < 24) {
             return [$tag, null];
         } elseif ($tag < 0xFF) {

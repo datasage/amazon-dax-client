@@ -36,7 +36,7 @@ class DaxDecoderTest extends TestCase
     public function testDecodeResponseWithEmptyResponse(): void
     {
         $result = $this->decoder->decodeResponse('GetItem', '');
-        
+
         $this->assertEquals([], $result);
     }
 
@@ -44,7 +44,7 @@ class DaxDecoderTest extends TestCase
     {
         $this->expectException(DaxException::class);
         $this->expectExceptionMessage('Failed to decode DAX response');
-        
+
         // Invalid CBOR data
         $this->decoder->decodeResponse('GetItem', 'invalid cbor data');
     }
@@ -53,11 +53,11 @@ class DaxDecoderTest extends TestCase
     {
         $this->expectException(DaxException::class);
         $this->expectExceptionMessage('Invalid response format: expected array');
-        
+
         // Create CBOR that decodes to a string instead of array
         $textObject = TextStringObject::create('not an array');
         $cborData = (string) $textObject;
-        
+
         $this->decoder->decodeResponse('GetItem', $cborData);
     }
 
@@ -65,7 +65,7 @@ class DaxDecoderTest extends TestCase
     {
         $textObject = TextStringObject::create('test string');
         $result = $this->decoder->cborObjectToArray($textObject);
-        
+
         $this->assertEquals('test string', $result);
     }
 
@@ -73,7 +73,7 @@ class DaxDecoderTest extends TestCase
     {
         $intObject = UnsignedIntegerObject::create(42);
         $result = $this->decoder->cborObjectToArray($intObject);
-        
+
         $this->assertEquals(42, $result);
     }
 
@@ -81,7 +81,7 @@ class DaxDecoderTest extends TestCase
     {
         $intObject = NegativeIntegerObject::create(-42);
         $result = $this->decoder->cborObjectToArray($intObject);
-        
+
         $this->assertEquals(-42, $result);
     }
 
@@ -89,7 +89,7 @@ class DaxDecoderTest extends TestCase
     {
         $trueObject = TrueObject::create();
         $result = $this->decoder->cborObjectToArray($trueObject);
-        
+
         $this->assertTrue($result);
     }
 
@@ -97,7 +97,7 @@ class DaxDecoderTest extends TestCase
     {
         $falseObject = FalseObject::create();
         $result = $this->decoder->cborObjectToArray($falseObject);
-        
+
         $this->assertFalse($result);
     }
 
@@ -105,7 +105,7 @@ class DaxDecoderTest extends TestCase
     {
         $nullObject = NullObject::create();
         $result = $this->decoder->cborObjectToArray($nullObject);
-        
+
         $this->assertNull($result);
     }
 
@@ -114,9 +114,9 @@ class DaxDecoderTest extends TestCase
         $listObject = ListObject::create();
         $listObject->add(TextStringObject::create('item1'));
         $listObject->add(TextStringObject::create('item2'));
-        
+
         $result = $this->decoder->cborObjectToArray($listObject);
-        
+
         $this->assertEquals(['item1', 'item2'], $result);
     }
 
@@ -125,9 +125,9 @@ class DaxDecoderTest extends TestCase
         $mapObject = MapObject::create();
         $mapObject->add(TextStringObject::create('key1'), TextStringObject::create('value1'));
         $mapObject->add(TextStringObject::create('key2'), UnsignedIntegerObject::create(42));
-        
+
         $result = $this->decoder->cborObjectToArray($mapObject);
-        
+
         $this->assertEquals(['key1' => 'value1', 'key2' => 42], $result);
     }
 
@@ -137,11 +137,11 @@ class DaxDecoderTest extends TestCase
         $listObject = ListObject::create();
         $listObject->add(TextStringObject::create('string1'));
         $listObject->add(TextStringObject::create('string2'));
-        
+
         $taggedObject = new GenericTag(25, pack('n', 258), $listObject); // TAG_DDB_STRING_SET = 258
-        
+
         $result = $this->decoder->cborObjectToArray($taggedObject);
-        
+
         $this->assertEquals(['SS' => ['string1', 'string2']], $result);
     }
 
@@ -150,9 +150,9 @@ class DaxDecoderTest extends TestCase
         // Create a mock CBOR object that doesn't match any known types
         $mockObject = $this->createMock(CBORObject::class);
         $mockObject->method('__toString')->willReturn('mock object string');
-        
+
         $result = $this->decoder->cborObjectToArray($mockObject);
-        
+
         $this->assertEquals('mock object string', $result);
     }
 
@@ -161,11 +161,11 @@ class DaxDecoderTest extends TestCase
         $response = [
             'name' => 'John',
             'age' => 30,
-            'active' => true
+            'active' => true,
         ];
-        
+
         $result = $this->decoder->convertResponseAttributeValues($response);
-        
+
         $this->assertEquals($response, $result);
     }
 
@@ -175,18 +175,18 @@ class DaxDecoderTest extends TestCase
             'name' => ['S' => 'John Doe'],
             'age' => ['N' => '30'],
             'active' => ['BOOL' => true],
-            'metadata' => ['NULL' => true]
+            'metadata' => ['NULL' => true],
         ];
-        
+
         $result = $this->decoder->convertResponseAttributeValues($response);
-        
+
         $expected = [
             'name' => 'John Doe',
             'age' => 30,
             'active' => true,
-            'metadata' => null
+            'metadata' => null,
         ];
-        
+
         $this->assertEquals($expected, $result);
     }
 
@@ -199,22 +199,22 @@ class DaxDecoderTest extends TestCase
                     'preferences' => [
                         'L' => [
                             ['S' => 'pref1'],
-                            ['S' => 'pref2']
-                        ]
-                    ]
-                ]
-            ]
+                            ['S' => 'pref2'],
+                        ],
+                    ],
+                ],
+            ],
         ];
-        
+
         $result = $this->decoder->convertResponseAttributeValues($response);
-        
+
         $expected = [
             'user' => [
                 'name' => 'John',
-                'preferences' => ['pref1', 'pref2']
-            ]
+                'preferences' => ['pref1', 'pref2'],
+            ],
         ];
-        
+
         $this->assertEquals($expected, $result);
     }
 
@@ -223,9 +223,9 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('convertFromDynamoDbAttribute');
         $method->setAccessible(true);
-        
+
         $result = $method->invoke($this->decoder, ['S' => 'test string']);
-        
+
         $this->assertEquals('test string', $result);
     }
 
@@ -234,9 +234,9 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('convertFromDynamoDbAttribute');
         $method->setAccessible(true);
-        
+
         $result = $method->invoke($this->decoder, ['N' => '42']);
-        
+
         $this->assertEquals(42, $result);
     }
 
@@ -245,9 +245,9 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('convertFromDynamoDbAttribute');
         $method->setAccessible(true);
-        
+
         $result = $method->invoke($this->decoder, ['N' => '3.14']);
-        
+
         $this->assertEquals(3.14, $result);
     }
 
@@ -256,9 +256,9 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('convertFromDynamoDbAttribute');
         $method->setAccessible(true);
-        
+
         $result = $method->invoke($this->decoder, ['N' => 'not-a-number']);
-        
+
         $this->assertEquals('not-a-number', $result);
     }
 
@@ -267,9 +267,9 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('convertFromDynamoDbAttribute');
         $method->setAccessible(true);
-        
+
         $result = $method->invoke($this->decoder, ['B' => 'binary data']);
-        
+
         $this->assertEquals('binary data', $result);
     }
 
@@ -278,9 +278,9 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('convertFromDynamoDbAttribute');
         $method->setAccessible(true);
-        
+
         $result = $method->invoke($this->decoder, ['SS' => ['string1', 'string2']]);
-        
+
         $this->assertEquals(['string1', 'string2'], $result);
     }
 
@@ -289,9 +289,9 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('convertFromDynamoDbAttribute');
         $method->setAccessible(true);
-        
+
         $result = $method->invoke($this->decoder, ['NS' => ['1', '2', '3']]);
-        
+
         $this->assertEquals(['1', '2', '3'], $result);
     }
 
@@ -300,9 +300,9 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('convertFromDynamoDbAttribute');
         $method->setAccessible(true);
-        
+
         $result = $method->invoke($this->decoder, ['BS' => ['binary1', 'binary2']]);
-        
+
         $this->assertEquals(['binary1', 'binary2'], $result);
     }
 
@@ -311,19 +311,19 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('convertFromDynamoDbAttribute');
         $method->setAccessible(true);
-        
+
         $mapData = [
             'name' => ['S' => 'John'],
-            'age' => ['N' => '30']
+            'age' => ['N' => '30'],
         ];
-        
+
         $result = $method->invoke($this->decoder, ['M' => $mapData]);
-        
+
         $expected = [
             'name' => 'John',
-            'age' => 30
+            'age' => 30,
         ];
-        
+
         $this->assertEquals($expected, $result);
     }
 
@@ -332,15 +332,15 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('convertFromDynamoDbAttribute');
         $method->setAccessible(true);
-        
+
         $listData = [
             ['S' => 'item1'],
             ['S' => 'item2'],
-            ['N' => '42']
+            ['N' => '42'],
         ];
-        
+
         $result = $method->invoke($this->decoder, ['L' => $listData]);
-        
+
         $this->assertEquals(['item1', 'item2', 42], $result);
     }
 
@@ -349,9 +349,9 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('convertFromDynamoDbAttribute');
         $method->setAccessible(true);
-        
+
         $result = $method->invoke($this->decoder, ['NULL' => true]);
-        
+
         $this->assertNull($result);
     }
 
@@ -360,9 +360,9 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('convertFromDynamoDbAttribute');
         $method->setAccessible(true);
-        
+
         $result = $method->invoke($this->decoder, ['BOOL' => true]);
-        
+
         $this->assertTrue($result);
     }
 
@@ -371,9 +371,9 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('convertFromDynamoDbAttribute');
         $method->setAccessible(true);
-        
+
         $result = $method->invoke($this->decoder, ['UNKNOWN' => 'some value']);
-        
+
         $this->assertEquals('some value', $result);
     }
 
@@ -382,7 +382,7 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('isDynamoDbAttribute');
         $method->setAccessible(true);
-        
+
         $this->assertTrue($method->invoke($this->decoder, ['S' => 'value']));
         $this->assertTrue($method->invoke($this->decoder, ['N' => '123']));
         $this->assertTrue($method->invoke($this->decoder, ['BOOL' => true]));
@@ -399,7 +399,7 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('isDynamoDbAttribute');
         $method->setAccessible(true);
-        
+
         $this->assertFalse($method->invoke($this->decoder, ['INVALID' => 'value']));
         $this->assertFalse($method->invoke($this->decoder, ['S' => 'value', 'N' => '123'])); // Multiple keys
         $this->assertFalse($method->invoke($this->decoder, [])); // Empty array
@@ -410,13 +410,13 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('decodeDynamoDbSet');
         $method->setAccessible(true);
-        
+
         $listObject = ListObject::create();
         $listObject->add(TextStringObject::create('string1'));
         $listObject->add(TextStringObject::create('string2'));
-        
+
         $result = $method->invoke($this->decoder, 'SS', $listObject);
-        
+
         $this->assertEquals(['SS' => ['string1', 'string2']], $result);
     }
 
@@ -425,13 +425,13 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('decodeDynamoDbSet');
         $method->setAccessible(true);
-        
+
         $listObject = ListObject::create();
         $listObject->add(TextStringObject::create('1'));
         $listObject->add(TextStringObject::create('2'));
-        
+
         $result = $method->invoke($this->decoder, 'NS', $listObject);
-        
+
         $this->assertEquals(['NS' => ['1', '2']], $result);
     }
 
@@ -440,13 +440,13 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('decodeDynamoDbSet');
         $method->setAccessible(true);
-        
+
         $listObject = ListObject::create();
         $listObject->add(TextStringObject::create('binary1'));
         $listObject->add(TextStringObject::create('binary2'));
-        
+
         $result = $method->invoke($this->decoder, 'BS', $listObject);
-        
+
         $this->assertEquals(['BS' => ['binary1', 'binary2']], $result);
     }
 
@@ -454,11 +454,11 @@ class DaxDecoderTest extends TestCase
     {
         $this->expectException(DaxException::class);
         $this->expectExceptionMessage('Expected ListObject for DynamoDB set');
-        
+
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('decodeDynamoDbSet');
         $method->setAccessible(true);
-        
+
         $textObject = TextStringObject::create('not a list');
         $method->invoke($this->decoder, 'SS', $textObject);
     }
@@ -468,10 +468,10 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('decodeDocumentPathOrdinal');
         $method->setAccessible(true);
-        
+
         $ordinalObject = UnsignedIntegerObject::create(123);
         $result = $method->invoke($this->decoder, $ordinalObject);
-        
+
         $this->assertEquals(['_document_path_ordinal' => 123], $result);
     }
 
@@ -480,14 +480,14 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('decodeDaxTaggedObject');
         $method->setAccessible(true);
-        
+
         $listObject = ListObject::create();
         $listObject->add(TextStringObject::create('string1'));
-        
+
         $taggedObject = new GenericTag(25, pack('n', 258), $listObject); // TAG_DDB_STRING_SET = 258
-        
+
         $result = $method->invoke($this->decoder, $taggedObject);
-        
+
         $this->assertEquals(['SS' => ['string1']], $result);
     }
 
@@ -496,14 +496,14 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('decodeDaxTaggedObject');
         $method->setAccessible(true);
-        
+
         $listObject = ListObject::create();
         $listObject->add(TextStringObject::create('1'));
-        
+
         $taggedObject = new GenericTag(25, pack('n', 259), $listObject); // TAG_DDB_NUMBER_SET = 259
-        
+
         $result = $method->invoke($this->decoder, $taggedObject);
-        
+
         $this->assertEquals(['NS' => ['1']], $result);
     }
 
@@ -512,14 +512,14 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('decodeDaxTaggedObject');
         $method->setAccessible(true);
-        
+
         $listObject = ListObject::create();
         $listObject->add(TextStringObject::create('binary1'));
-        
+
         $taggedObject = new GenericTag(25, pack('n', 260), $listObject); // TAG_DDB_BINARY_SET = 260
-        
+
         $result = $method->invoke($this->decoder, $taggedObject);
-        
+
         $this->assertEquals(['BS' => ['binary1']], $result);
     }
 
@@ -528,12 +528,12 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('decodeDaxTaggedObject');
         $method->setAccessible(true);
-        
+
         $ordinalObject = UnsignedIntegerObject::create(456);
         $taggedObject = new GenericTag(25, pack('n', 261), $ordinalObject); // TAG_DDB_DOCUMENT_PATH_ORDINAL = 261
-        
+
         $result = $method->invoke($this->decoder, $taggedObject);
-        
+
         $this->assertEquals(['_document_path_ordinal' => 456], $result);
     }
 
@@ -542,12 +542,12 @@ class DaxDecoderTest extends TestCase
         $reflection = new \ReflectionClass($this->decoder);
         $method = $reflection->getMethod('decodeDaxTaggedObject');
         $method->setAccessible(true);
-        
+
         $textObject = TextStringObject::create('unknown tagged value');
         $taggedObject = new GenericTag(25, pack('n', 999), $textObject); // Unknown tag 999
-        
+
         $result = $method->invoke($this->decoder, $taggedObject);
-        
+
         $this->assertEquals('unknown tagged value', $result);
     }
 
@@ -557,11 +557,11 @@ class DaxDecoderTest extends TestCase
         $mapObject = MapObject::create();
         $mapObject->add(TextStringObject::create('name'), TextStringObject::create('John'));
         $mapObject->add(TextStringObject::create('age'), UnsignedIntegerObject::create(30));
-        
+
         $cborData = (string) $mapObject;
-        
+
         $result = $this->decoder->decodeResponse('GetItem', $cborData);
-        
+
         $this->assertEquals(['name' => 'John', 'age' => 30], $result);
     }
 
@@ -569,26 +569,26 @@ class DaxDecoderTest extends TestCase
     {
         // Create CBOR with DynamoDB attributes
         $mapObject = MapObject::create();
-        
+
         // Add a DynamoDB string attribute
         $stringAttr = MapObject::create();
         $stringAttr->add(TextStringObject::create('S'), TextStringObject::create('John Doe'));
         $mapObject->add(TextStringObject::create('name'), $stringAttr);
-        
+
         // Add a DynamoDB number attribute
         $numberAttr = MapObject::create();
         $numberAttr->add(TextStringObject::create('N'), TextStringObject::create('30'));
         $mapObject->add(TextStringObject::create('age'), $numberAttr);
-        
+
         $cborData = (string) $mapObject;
-        
+
         $result = $this->decoder->decodeResponse('GetItem', $cborData);
-        
+
         $expected = [
             'name' => 'John Doe',
-            'age' => 30
+            'age' => 30,
         ];
-        
+
         $this->assertEquals($expected, $result);
     }
 }

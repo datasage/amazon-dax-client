@@ -44,8 +44,8 @@ class AmazonDaxClient implements DaxClientInterface
         ], $config);
 
         // Initialize logger - use provided logger or NullLogger as default
-        $this->logger = $this->config['logger'] instanceof LoggerInterface 
-            ? $this->config['logger'] 
+        $this->logger = $this->config['logger'] instanceof LoggerInterface
+            ? $this->config['logger']
             : new NullLogger();
 
         $this->validateConfig();
@@ -69,9 +69,9 @@ class AmazonDaxClient implements DaxClientInterface
     public function batchGetItem(array $requestItems): array
     {
         $this->ensureNotClosed();
-        
+
         $request = [
-            'RequestItems' => $requestItems
+            'RequestItems' => $requestItems,
         ];
 
         return $this->executeRequest('BatchGetItem', $request);
@@ -83,9 +83,9 @@ class AmazonDaxClient implements DaxClientInterface
     public function batchWriteItem(array $requestItems): array
     {
         $this->ensureNotClosed();
-        
+
         $request = [
-            'RequestItems' => $requestItems
+            'RequestItems' => $requestItems,
         ];
 
         return $this->executeRequest('BatchWriteItem', $request);
@@ -97,10 +97,10 @@ class AmazonDaxClient implements DaxClientInterface
     public function deleteItem(string $tableName, array $key, array $options = []): array
     {
         $this->ensureNotClosed();
-        
+
         $request = array_merge([
             'TableName' => $tableName,
-            'Key' => $key
+            'Key' => $key,
         ], $options);
 
         return $this->executeRequest('DeleteItem', $request);
@@ -112,10 +112,10 @@ class AmazonDaxClient implements DaxClientInterface
     public function getItem(string $tableName, array $key, array $options = []): array
     {
         $this->ensureNotClosed();
-        
+
         $request = array_merge([
             'TableName' => $tableName,
-            'Key' => $key
+            'Key' => $key,
         ], $options);
 
         return $this->executeRequest('GetItem', $request);
@@ -127,10 +127,10 @@ class AmazonDaxClient implements DaxClientInterface
     public function putItem(string $tableName, array $item, array $options = []): array
     {
         $this->ensureNotClosed();
-        
+
         $request = array_merge([
             'TableName' => $tableName,
-            'Item' => $item
+            'Item' => $item,
         ], $options);
 
         return $this->executeRequest('PutItem', $request);
@@ -142,9 +142,9 @@ class AmazonDaxClient implements DaxClientInterface
     public function query(string $tableName, array $options = []): array
     {
         $this->ensureNotClosed();
-        
+
         $request = array_merge([
-            'TableName' => $tableName
+            'TableName' => $tableName,
         ], $options);
 
         return $this->executeRequest('Query', $request);
@@ -156,9 +156,9 @@ class AmazonDaxClient implements DaxClientInterface
     public function scan(string $tableName, array $options = []): array
     {
         $this->ensureNotClosed();
-        
+
         $request = array_merge([
-            'TableName' => $tableName
+            'TableName' => $tableName,
         ], $options);
 
         return $this->executeRequest('Scan', $request);
@@ -170,10 +170,10 @@ class AmazonDaxClient implements DaxClientInterface
     public function updateItem(string $tableName, array $key, array $options = []): array
     {
         $this->ensureNotClosed();
-        
+
         $request = array_merge([
             'TableName' => $tableName,
-            'Key' => $key
+            'Key' => $key,
         ], $options);
 
         return $this->executeRequest('UpdateItem', $request);

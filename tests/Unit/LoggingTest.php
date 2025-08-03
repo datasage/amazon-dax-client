@@ -1,9 +1,9 @@
 <?php
 
-namespace Amazon\Dax\Tests\Unit;
+namespace Dax\Tests\Unit;
 
-use Amazon\Dax\AmazonDaxClient;
-use Amazon\Dax\Connection\ClusterManager;
+use Dax\AmazonDaxClient;
+use Dax\Connection\ClusterManager;
 use Monolog\Logger;
 use Monolog\Handler\TestHandler;
 use Monolog\Level;
@@ -26,16 +26,16 @@ class LoggingTest extends TestCase
         $config = [
             'region' => 'us-east-1',
             'endpoints' => ['dax://test-cluster.abc123.dax-clusters.us-east-1.amazonaws.com:8111'],
-            'logger' => $this->logger
+            'logger' => $this->logger,
         ];
 
         // This should not throw an exception and should accept the logger
         $client = new AmazonDaxClient($config);
-        
+
         // Verify that initialization logging occurred
         $this->assertTrue($this->testHandler->hasInfoRecords());
         $this->assertTrue($this->testHandler->hasRecord('Initializing DAX cluster manager', Level::Info));
-        
+
         $client->close();
     }
 
@@ -43,15 +43,15 @@ class LoggingTest extends TestCase
     {
         $config = [
             'region' => 'us-east-1',
-            'endpoints' => ['dax://test-cluster.abc123.dax-clusters.us-east-1.amazonaws.com:8111']
+            'endpoints' => ['dax://test-cluster.abc123.dax-clusters.us-east-1.amazonaws.com:8111'],
         ];
 
         // This should not throw an exception and should use NullLogger
         $client = new AmazonDaxClient($config);
-        
+
         // No logs should be recorded since NullLogger is used
         $this->assertFalse($this->testHandler->hasRecords(Level::Debug));
-        
+
         $client->close();
     }
 
@@ -59,7 +59,7 @@ class LoggingTest extends TestCase
     {
         $config = [
             'region' => 'us-east-1',
-            'endpoints' => ['dax://test-cluster.abc123.dax-clusters.us-east-1.amazonaws.com:8111']
+            'endpoints' => ['dax://test-cluster.abc123.dax-clusters.us-east-1.amazonaws.com:8111'],
         ];
 
         $clusterManager = new ClusterManager($config, $this->logger);
@@ -67,9 +67,9 @@ class LoggingTest extends TestCase
         // Verify initialization logs
         $this->assertTrue($this->testHandler->hasInfoRecords());
         $this->assertTrue($this->testHandler->hasRecord('Initializing DAX cluster manager', Level::Info));
-        
+
         $clusterManager->close();
-        
+
         // Verify close logs
         $this->assertTrue($this->testHandler->hasRecord('Closing DAX cluster manager', Level::Info));
         $this->assertTrue($this->testHandler->hasRecord('DAX cluster manager closed successfully', Level::Debug));
@@ -80,11 +80,11 @@ class LoggingTest extends TestCase
         // Invalid configuration to trigger error
         $config = [
             'region' => 'us-east-1',
-            'endpoints' => [] // Empty endpoints should cause error
+            'endpoints' => [], // Empty endpoints should cause error
         ];
 
-        $this->expectException(\Amazon\Dax\Exception\DaxException::class);
-        
+        $this->expectException(\Dax\Exception\DaxException::class);
+
         try {
             new ClusterManager($config, $this->logger);
         } catch (\Exception $e) {
@@ -101,8 +101,8 @@ class LoggingTest extends TestCase
             'region' => 'us-west-2',
             'endpoints' => [
                 'dax://cluster1.abc123.dax-clusters.us-west-2.amazonaws.com:8111',
-                'dax://cluster2.abc123.dax-clusters.us-west-2.amazonaws.com:8111'
-            ]
+                'dax://cluster2.abc123.dax-clusters.us-west-2.amazonaws.com:8111',
+            ],
         ];
 
         $clusterManager = new ClusterManager($config, $this->logger);
@@ -110,7 +110,7 @@ class LoggingTest extends TestCase
         // Check that context information is logged
         $records = $this->testHandler->getRecords();
         $initRecord = null;
-        
+
         foreach ($records as $record) {
             if ($record['message'] === 'Initializing DAX cluster manager') {
                 $initRecord = $record;
@@ -122,7 +122,7 @@ class LoggingTest extends TestCase
         $this->assertArrayHasKey('context', $initRecord);
         $this->assertArrayHasKey('region', $initRecord['context']);
         $this->assertEquals('us-west-2', $initRecord['context']['region']);
-        
+
         $clusterManager->close();
     }
 }

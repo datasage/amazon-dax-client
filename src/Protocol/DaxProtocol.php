@@ -34,7 +34,7 @@ class DaxProtocol
         'Scan' => 3,
         'DefineKeySchema' => 681,
         'DefineAttributeList' => 656,
-        'DefineAttributeListId' => 657
+        'DefineAttributeListId' => 657,
     ];
 
 
@@ -70,16 +70,16 @@ class DaxProtocol
 
         // Prepare the request
         $preparedRequest = $this->prepareRequest($operation, $request);
-        
+
         // Encode the request
         $encodedRequest = $this->encoder->encodeRequest($methodId, $preparedRequest);
-        
+
         // Send the request
         $connection->send($encodedRequest);
-        
+
         // Receive and decode the response
         $response = $this->receiveResponse($connection);
-        
+
         // Decode the response
         return $this->decoder->decodeResponse($operation, $response);
     }
@@ -100,17 +100,17 @@ class DaxProtocol
             case 'DeleteItem':
             case 'UpdateItem':
                 return $this->prepareSingleItemRequest($request);
-                
+
             case 'BatchGetItem':
                 return $this->prepareBatchGetRequest($request);
-                
+
             case 'BatchWriteItem':
                 return $this->prepareBatchWriteRequest($request);
-                
+
             case 'Query':
             case 'Scan':
                 return $this->prepareQueryScanRequest($request);
-                
+
             default:
                 return $request;
         }
@@ -133,7 +133,7 @@ class DaxProtocol
         if (isset($request['Key'])) {
             $request['Key'] = $this->convertAttributeValues($request['Key']);
         }
-        
+
         if (isset($request['Item'])) {
             $request['Item'] = $this->convertAttributeValues($request['Item']);
         }
@@ -221,7 +221,7 @@ class DaxProtocol
         // This is a simplified conversion
         // In a full implementation, this would handle all DynamoDB types
         $converted = [];
-        
+
         foreach ($attributes as $name => $value) {
             if (is_array($value) && count($value) === 1) {
                 // Already in DynamoDB format (e.g., ['S' => 'value'])
@@ -231,7 +231,7 @@ class DaxProtocol
                 $converted[$name] = $this->convertSimpleValue($value);
             }
         }
-        
+
         return $converted;
     }
 
@@ -246,7 +246,7 @@ class DaxProtocol
         if (is_string($value)) {
             return ['S' => $value];
         } elseif (is_int($value) || is_float($value)) {
-            return ['N' => (string)$value];
+            return ['N' => (string) $value];
         } elseif (is_bool($value)) {
             return ['BOOL' => $value];
         } elseif (is_null($value)) {
@@ -258,7 +258,7 @@ class DaxProtocol
             // Simple list conversion
             return ['L' => array_map([$this, 'convertSimpleValue'], $value)];
         }
-        
+
         throw new DaxException('Unsupported attribute value type: ' . gettype($value));
     }
 
@@ -275,16 +275,16 @@ class DaxProtocol
         // Read response header (8 bytes: status + length)
         $header = $connection->receive(8);
         $headerData = unpack('Nstatus/Nlength', $header);
-        
+
         if ($headerData['status'] !== 0) {
             throw new DaxException("DAX request failed with status: {$headerData['status']}");
         }
-        
+
         // Read response payload
         if ($headerData['length'] > 0) {
             return $connection->receive($headerData['length']);
         }
-        
+
         return '';
     }
 

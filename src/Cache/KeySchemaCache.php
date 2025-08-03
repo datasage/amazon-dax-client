@@ -40,7 +40,7 @@ class KeySchemaCache implements CacheInterface
     public function get(string $key, mixed $default = null): mixed
     {
         $this->validateKey($key);
-        
+
         if (!isset($this->cache[$key])) {
             return $default;
         }
@@ -48,7 +48,7 @@ class KeySchemaCache implements CacheInterface
         // Check if entry has expired
         $timestamp = $this->timestamps[$key];
         $currentTime = $this->getCurrentTimeMillis();
-        
+
         if ($currentTime - $timestamp > $this->ttlMillis) {
             $this->delete($key);
             return $default;
@@ -69,7 +69,7 @@ class KeySchemaCache implements CacheInterface
     public function set(string $key, mixed $value, null|int|\DateInterval $ttl = null): bool
     {
         $this->validateKey($key);
-        
+
         // Ensure we don't exceed max size
         if (count($this->cache) >= $this->maxSize && !isset($this->cache[$key])) {
             $this->evictOldest();
@@ -90,7 +90,7 @@ class KeySchemaCache implements CacheInterface
     public function delete(string $key): bool
     {
         $this->validateKey($key);
-        
+
         $existed = isset($this->cache[$key]);
         unset($this->cache[$key]);
         unset($this->timestamps[$key]);
@@ -129,7 +129,7 @@ class KeySchemaCache implements CacheInterface
             'size' => count($this->cache),
             'max_size' => $this->maxSize,
             'ttl_millis' => $this->ttlMillis,
-            'expired_count' => $expiredCount
+            'expired_count' => $expiredCount,
         ];
     }
 
@@ -240,11 +240,11 @@ class KeySchemaCache implements CacheInterface
     private function validateKey(string $key): void
     {
         if ($key === '') {
-            throw new class('Cache key cannot be empty') extends \InvalidArgumentException implements InvalidArgumentException {};
+            throw new class ('Cache key cannot be empty') extends \InvalidArgumentException implements InvalidArgumentException {};
         }
-        
+
         if (preg_match('/[{}()\/@:]/', $key)) {
-            throw new class('Cache key contains reserved characters') extends \InvalidArgumentException implements InvalidArgumentException {};
+            throw new class ('Cache key contains reserved characters') extends \InvalidArgumentException implements InvalidArgumentException {};
         }
     }
 
@@ -268,6 +268,6 @@ class KeySchemaCache implements CacheInterface
      */
     private function getCurrentTimeMillis(): int
     {
-        return (int)(microtime(true) * 1000);
+        return (int) (microtime(true) * 1000);
     }
 }

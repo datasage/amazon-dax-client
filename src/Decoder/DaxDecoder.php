@@ -20,7 +20,7 @@ use CBOR\Tag;
 
 /**
  * DAX Protocol Decoder
- * 
+ *
  * Handles decoding of responses and data structures from DAX protocol communication
  */
 class DaxDecoder
@@ -44,20 +44,20 @@ class DaxDecoder
         if (empty($response)) {
             return [];
         }
-        
+
         try {
             // Use CBOR decoding for the response
             $decoder = Decoder::create();
             $stream = StringStream::create($response);
             $cborObject = $decoder->decode($stream);
-            
+
             // Convert CBOR object to PHP array
             $decoded = $this->cborObjectToArray($cborObject);
-            
+
             if (!is_array($decoded)) {
                 throw new DaxException('Invalid response format: expected array');
             }
-            
+
             return $this->convertResponseAttributeValues($decoded);
         } catch (\Exception $e) {
             throw new DaxException('Failed to decode DAX response: ' . $e->getMessage(), 0, $e);
@@ -105,7 +105,7 @@ class DaxDecoder
             return null;
         } else {
             // Fallback - try to get normalized value
-            return method_exists($cborObject, 'getNormalizedData') ? 
+            return method_exists($cborObject, 'getNormalizedData') ?
                 $cborObject->getNormalizedData() : (string) $cborObject;
         }
     }
@@ -128,7 +128,7 @@ class DaxDecoder
                 }
             }
         }
-        
+
         return $response;
     }
 
@@ -143,7 +143,7 @@ class DaxDecoder
         if (count($value) !== 1) {
             return false;
         }
-        
+
         $type = array_keys($value)[0];
         return in_array($type, ['S', 'N', 'B', 'SS', 'NS', 'BS', 'M', 'L', 'NULL', 'BOOL']);
     }
@@ -158,7 +158,7 @@ class DaxDecoder
     {
         $type = array_keys($attribute)[0];
         $value = $attribute[$type];
-        
+
         switch ($type) {
             case 'S':
                 return (string) $value;
@@ -194,7 +194,7 @@ class DaxDecoder
         // Extract tag number from the data field based on additional information
         $additionalInfo = $taggedObject->getAdditionalInformation();
         $data = $taggedObject->getData();
-        
+
         if ($additionalInfo < 24) {
             $tag = $additionalInfo;
         } elseif ($additionalInfo === 24 && $data !== null) {
@@ -208,7 +208,7 @@ class DaxDecoder
             $tag = $additionalInfo;
         }
         $value = $taggedObject->getValue();
-        
+
         switch ($tag) {
             case self::TAG_DDB_STRING_SET:
                 return $this->decodeDynamoDbSet('SS', $value);
@@ -236,12 +236,12 @@ class DaxDecoder
         if (!($value instanceof ListObject)) {
             throw new DaxException("Expected ListObject for DynamoDB set, got " . get_class($value));
         }
-        
+
         $values = [];
         foreach ($value as $item) {
             $values[] = $this->cborObjectToArray($item);
         }
-        
+
         return [$setType => $values];
     }
 
