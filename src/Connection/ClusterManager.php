@@ -206,7 +206,8 @@ class ClusterManager
             'credentials' => $this->config['credentials'],
             'key_schema_cache' => $this->keySchemaCache,
             'attribute_list_cache' => $this->attributeListCache,
-        ]);
+            'debug_logging' => $this->config['debug_logging'] ?? false,
+        ], $this->logger);
     }
 
     /**

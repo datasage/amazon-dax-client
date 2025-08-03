@@ -10,6 +10,8 @@ use Dax\Cache\KeySchemaCache;
 use Dax\Cache\AttributeListCache;
 use Dax\Encoder\DaxEncoder;
 use Dax\Decoder\DaxDecoder;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Handles the DAX protocol communication
@@ -21,6 +23,8 @@ class DaxProtocol
     private ?AttributeListCache $attributeListCache;
     private DaxEncoder $encoder;
     private DaxDecoder $decoder;
+    private LoggerInterface $logger;
+    private bool $debugLogging;
 
     // DAX Method IDs (simplified subset from Python client)
     private const METHOD_IDS = [
@@ -42,14 +46,17 @@ class DaxProtocol
      * Constructor
      *
      * @param array $config Protocol configuration
+     * @param LoggerInterface|null $logger Logger instance
      */
-    public function __construct(array $config)
+    public function __construct(array $config, ?LoggerInterface $logger = null)
     {
         $this->config = $config;
         $this->keySchemaCache = $config['key_schema_cache'] ?? null;
         $this->attributeListCache = $config['attribute_list_cache'] ?? null;
         $this->encoder = new DaxEncoder();
         $this->decoder = new DaxDecoder();
+        $this->logger = $logger ?? new NullLogger();
+        $this->debugLogging = $config['debug_logging'] ?? false;
     }
 
     /**
@@ -68,11 +75,38 @@ class DaxProtocol
             throw new DaxException("Unsupported operation: {$operation}");
         }
 
+        // Log the incoming request in diagnostic format (only if debug logging is enabled)
+        if ($this->debugLogging) {
+            $this->logger->debug('DAX Protocol Request', [
+                'operation' => $operation,
+                'method_id' => $methodId,
+                'original_request' => $this->formatRequestForLogging($request),
+                'connection' => spl_object_hash($connection),
+            ]);
+        }
+
         // Prepare the request
         $preparedRequest = $this->prepareRequest($operation, $request);
 
+        // Log the prepared request (only if debug logging is enabled)
+        if ($this->debugLogging) {
+            $this->logger->debug('DAX Protocol Prepared Request', [
+                'operation' => $operation,
+                'prepared_request' => $this->formatRequestForLogging($preparedRequest),
+            ]);
+        }
+
         // Encode the request
         $encodedRequest = $this->encoder->encodeRequest($methodId, $preparedRequest);
+
+        // Log encoded request details (only if debug logging is enabled)
+        if ($this->debugLogging) {
+            $this->logger->debug('DAX Protocol Encoded Request', [
+                'operation' => $operation,
+                'encoded_size_bytes' => strlen($encodedRequest),
+                'encoded_hex_preview' => substr(bin2hex($encodedRequest), 0, 100) . (strlen($encodedRequest) > 50 ? '...' : ''),
+            ]);
+        }
 
         // Send the request
         $connection->send($encodedRequest);
@@ -80,8 +114,102 @@ class DaxProtocol
         // Receive and decode the response
         $response = $this->receiveResponse($connection);
 
+        // Log raw response details (only if debug logging is enabled)
+        if ($this->debugLogging) {
+            $this->logger->debug('DAX Protocol Raw Response', [
+                'operation' => $operation,
+                'response_size_bytes' => strlen($response),
+                'response_hex_preview' => substr(bin2hex($response), 0, 100) . (strlen($response) > 50 ? '...' : ''),
+            ]);
+        }
+
         // Decode the response
-        return $this->decoder->decodeResponse($operation, $response);
+        $decodedResponse = $this->decoder->decodeResponse($operation, $response);
+
+        // Log the decoded response in diagnostic format (only if debug logging is enabled)
+        if ($this->debugLogging) {
+            $this->logger->debug('DAX Protocol Decoded Response', [
+                'operation' => $operation,
+                'decoded_response' => $this->formatResponseForLogging($decodedResponse),
+            ]);
+        }
+
+        return $decodedResponse;
+    }
+
+    /**
+     * Format request data for diagnostic logging
+     *
+     * @param array $request Request data
+     * @return array Formatted request for logging
+     */
+    private function formatRequestForLogging(array $request): array
+    {
+        $formatted = [];
+        
+        foreach ($request as $key => $value) {
+            if (is_array($value)) {
+                $formatted[$key] = $this->formatArrayForLogging($value);
+            } else {
+                $formatted[$key] = $value;
+            }
+        }
+        
+        return $formatted;
+    }
+
+    /**
+     * Format response data for diagnostic logging
+     *
+     * @param array $response Response data
+     * @return array Formatted response for logging
+     */
+    private function formatResponseForLogging(array $response): array
+    {
+        $formatted = [];
+        
+        foreach ($response as $key => $value) {
+            if (is_array($value)) {
+                $formatted[$key] = $this->formatArrayForLogging($value);
+            } else {
+                $formatted[$key] = $value;
+            }
+        }
+        
+        return $formatted;
+    }
+
+    /**
+     * Format array data for diagnostic logging with size limits
+     *
+     * @param array $data Array data to format
+     * @param int $maxDepth Maximum recursion depth
+     * @param int $currentDepth Current recursion depth
+     * @return array|string Formatted array or truncation message
+     */
+    private function formatArrayForLogging(array $data, int $maxDepth = 3, int $currentDepth = 0): array|string
+    {
+        if ($currentDepth >= $maxDepth) {
+            return '[TRUNCATED: Max depth reached]';
+        }
+        
+        if (count($data) > 50) {
+            return '[TRUNCATED: Array too large (' . count($data) . ' items)]';
+        }
+        
+        $formatted = [];
+        
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $formatted[$key] = $this->formatArrayForLogging($value, $maxDepth, $currentDepth + 1);
+            } elseif (is_string($value) && strlen($value) > 200) {
+                $formatted[$key] = substr($value, 0, 200) . '... [TRUNCATED: String too long]';
+            } else {
+                $formatted[$key] = $value;
+            }
+        }
+        
+        return $formatted;
     }
 
     /**

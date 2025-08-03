@@ -41,6 +41,7 @@ class AmazonDaxClient implements DaxClientInterface
             'idle_timeout' => 30000,
             'skip_hostname_verification' => false,
             'logger' => null,
+            'debug_logging' => false,
         ], $config);
 
         // Initialize logger - use provided logger or NullLogger as default
