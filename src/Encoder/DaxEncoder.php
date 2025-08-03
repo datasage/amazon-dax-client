@@ -65,7 +65,8 @@ class DaxEncoder
             }
             
             // Check if it's an associative array (map) or indexed array (list)
-            if (array_keys($data) === range(0, count($data) - 1)) {
+            // Handle empty array as ListObject
+            if (empty($data) || array_keys($data) === range(0, count($data) - 1)) {
                 // Indexed array - create ListObject
                 $listObject = ListObject::create();
                 foreach ($data as $item) {
@@ -94,7 +95,10 @@ class DaxEncoder
             // For floats, we'll convert to string and back to maintain precision
             return TextStringObject::create((string) $data);
         } else {
-            // Fallback to string representation
+            // Fallback to string representation for objects and other types
+            if (is_object($data)) {
+                return TextStringObject::create(json_encode($data) ?: 'Object');
+            }
             return TextStringObject::create((string) $data);
         }
     }
