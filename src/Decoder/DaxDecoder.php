@@ -16,7 +16,7 @@ use CBOR\NegativeIntegerObject;
 use CBOR\OtherObject\TrueObject;
 use CBOR\OtherObject\FalseObject;
 use CBOR\OtherObject\NullObject;
-use CBOR\TaggedObject;
+use CBOR\Tag;
 
 /**
  * DAX Protocol Decoder
@@ -72,7 +72,7 @@ class DaxDecoder
      */
     public function cborObjectToArray(\CBOR\CBORObject $cborObject)
     {
-        if ($cborObject instanceof TaggedObject) {
+        if ($cborObject instanceof Tag) {
             return $this->decodeDaxTaggedObject($cborObject);
         } elseif ($cborObject instanceof MapObject) {
             $result = [];
@@ -186,12 +186,27 @@ class DaxDecoder
     /**
      * Decode DAX-specific tagged CBOR objects
      *
-     * @param TaggedObject $taggedObject Tagged CBOR object
+     * @param Tag $taggedObject Tagged CBOR object
      * @return mixed Decoded value
      */
-    private function decodeDaxTaggedObject(TaggedObject $taggedObject)
+    private function decodeDaxTaggedObject(Tag $taggedObject)
     {
-        $tag = $taggedObject->getTag();
+        // Extract tag number from the data field based on additional information
+        $additionalInfo = $taggedObject->getAdditionalInformation();
+        $data = $taggedObject->getData();
+        
+        if ($additionalInfo < 24) {
+            $tag = $additionalInfo;
+        } elseif ($additionalInfo === 24 && $data !== null) {
+            $tag = unpack('C', $data)[1];
+        } elseif ($additionalInfo === 25 && $data !== null) {
+            $tag = unpack('n', $data)[1];
+        } elseif ($additionalInfo === 26 && $data !== null) {
+            $tag = unpack('N', $data)[1];
+        } else {
+            // Fallback - use additional info as tag
+            $tag = $additionalInfo;
+        }
         $value = $taggedObject->getValue();
         
         switch ($tag) {
