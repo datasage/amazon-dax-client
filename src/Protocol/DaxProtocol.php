@@ -8,6 +8,8 @@ use Amazon\Dax\Connection\DaxConnection;
 use Amazon\Dax\Exception\DaxException;
 use Amazon\Dax\Cache\KeySchemaCache;
 use Amazon\Dax\Cache\AttributeListCache;
+use Amazon\Dax\Encoder\DaxEncoder;
+use Amazon\Dax\Decoder\DaxDecoder;
 
 /**
  * Handles the DAX protocol communication
@@ -17,6 +19,8 @@ class DaxProtocol
     private array $config;
     private ?KeySchemaCache $keySchemaCache;
     private ?AttributeListCache $attributeListCache;
+    private DaxEncoder $encoder;
+    private DaxDecoder $decoder;
 
     // DAX Method IDs (simplified subset from Python client)
     private const METHOD_IDS = [
@@ -33,6 +37,7 @@ class DaxProtocol
         'DefineAttributeListId' => 657
     ];
 
+
     /**
      * Constructor
      *
@@ -43,6 +48,8 @@ class DaxProtocol
         $this->config = $config;
         $this->keySchemaCache = $config['key_schema_cache'] ?? null;
         $this->attributeListCache = $config['attribute_list_cache'] ?? null;
+        $this->encoder = new DaxEncoder();
+        $this->decoder = new DaxDecoder();
     }
 
     /**
@@ -65,7 +72,7 @@ class DaxProtocol
         $preparedRequest = $this->prepareRequest($operation, $request);
         
         // Encode the request
-        $encodedRequest = $this->encodeRequest($methodId, $preparedRequest);
+        $encodedRequest = $this->encoder->encodeRequest($methodId, $preparedRequest);
         
         // Send the request
         $connection->send($encodedRequest);
@@ -74,7 +81,7 @@ class DaxProtocol
         $response = $this->receiveResponse($connection);
         
         // Decode the response
-        return $this->decodeResponse($operation, $response);
+        return $this->decoder->decodeResponse($operation, $response);
     }
 
     /**
@@ -255,22 +262,6 @@ class DaxProtocol
         throw new DaxException('Unsupported attribute value type: ' . gettype($value));
     }
 
-    /**
-     * Encode a request for transmission
-     *
-     * @param int $methodId Method ID
-     * @param array $request Request parameters
-     * @return string Encoded request
-     */
-    private function encodeRequest(int $methodId, array $request): string
-    {
-        // This is a simplified encoding
-        // In a full implementation, this would use CBOR encoding
-        $payload = json_encode($request);
-        
-        // Simple protocol: [method_id:4][length:4][payload]
-        return pack('NN', $methodId, strlen($payload)) . $payload;
-    }
 
     /**
      * Receive a response from the connection
@@ -297,95 +288,5 @@ class DaxProtocol
         return '';
     }
 
-    /**
-     * Decode a response
-     *
-     * @param string $operation Operation name
-     * @param string $response Raw response data
-     * @return array Decoded response
-     * @throws DaxException
-     */
-    private function decodeResponse(string $operation, string $response): array
-    {
-        if (empty($response)) {
-            return [];
-        }
-        
-        // This is a simplified decoding
-        // In a full implementation, this would use CBOR decoding
-        $decoded = json_decode($response, true);
-        
-        if ($decoded === null) {
-            throw new DaxException('Failed to decode DAX response');
-        }
-        
-        return $this->convertResponseAttributeValues($decoded);
-    }
 
-    /**
-     * Convert response attribute values from DAX format
-     *
-     * @param array $response Response data
-     * @return array Converted response
-     */
-    private function convertResponseAttributeValues(array $response): array
-    {
-        // Recursively convert attribute values in the response
-        foreach ($response as $key => &$value) {
-            if (is_array($value)) {
-                if ($this->isDynamoDbAttribute($value)) {
-                    $value = $this->convertFromDynamoDbAttribute($value);
-                } else {
-                    $value = $this->convertResponseAttributeValues($value);
-                }
-            }
-        }
-        
-        return $response;
-    }
-
-    /**
-     * Check if an array is a DynamoDB attribute
-     *
-     * @param array $value Array to check
-     * @return bool True if it's a DynamoDB attribute
-     */
-    private function isDynamoDbAttribute(array $value): bool
-    {
-        if (count($value) !== 1) {
-            return false;
-        }
-        
-        $type = array_keys($value)[0];
-        return in_array($type, ['S', 'N', 'B', 'SS', 'NS', 'BS', 'M', 'L', 'NULL', 'BOOL']);
-    }
-
-    /**
-     * Convert from DynamoDB attribute format to simple value
-     *
-     * @param array $attribute DynamoDB attribute
-     * @return mixed Simple value
-     */
-    private function convertFromDynamoDbAttribute(array $attribute)
-    {
-        $type = array_keys($attribute)[0];
-        $value = $attribute[$type];
-        
-        switch ($type) {
-            case 'S':
-                return $value;
-            case 'N':
-                return is_float($value) ? (float)$value : (int)$value;
-            case 'BOOL':
-                return $value;
-            case 'NULL':
-                return null;
-            case 'L':
-                return array_map([$this, 'convertFromDynamoDbAttribute'], $value);
-            case 'M':
-                return $this->convertResponseAttributeValues($value);
-            default:
-                return $value;
-        }
-    }
 }
