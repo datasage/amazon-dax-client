@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Amazon\Dax\Tests\Unit\Cache;
+namespace Dax\Tests\Unit\Cache;
 
-use Amazon\Dax\Cache\KeySchemaCache;
+use Dax\Cache\KeySchemaCache;
 use PHPUnit\Framework\TestCase;
 
 /**

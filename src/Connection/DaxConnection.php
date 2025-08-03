@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Amazon\Dax\Connection;
+namespace Dax\Connection;
 
-use Amazon\Dax\Exception\DaxException;
+use Dax\Exception\DaxException;
 
 /**
  * Represents a single connection to a DAX node

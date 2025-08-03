@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Amazon\Dax\Connection;
+namespace Dax\Connection;
 
-use Amazon\Dax\Exception\DaxException;
-use Amazon\Dax\Protocol\DaxProtocol;
-use Amazon\Dax\Cache\KeySchemaCache;
-use Amazon\Dax\Cache\AttributeListCache;
+use Dax\Exception\DaxException;
+use Dax\Protocol\DaxProtocol;
+use Dax\Cache\KeySchemaCache;
+use Dax\Cache\AttributeListCache;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Amazon\Dax\Tests\Unit;
+namespace Dax\Tests\Unit;
 
-use Amazon\Dax\AmazonDaxClient;
-use Amazon\Dax\Exception\DaxException;
+use Dax\AmazonDaxClient;
+use Dax\Exception\DaxException;
 use PHPUnit\Framework\TestCase;
 
 /**

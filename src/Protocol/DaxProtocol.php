@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Amazon\Dax\Protocol;
+namespace Dax\Protocol;
 
-use Amazon\Dax\Connection\DaxConnection;
-use Amazon\Dax\Exception\DaxException;
-use Amazon\Dax\Cache\KeySchemaCache;
-use Amazon\Dax\Cache\AttributeListCache;
-use Amazon\Dax\Encoder\DaxEncoder;
-use Amazon\Dax\Decoder\DaxDecoder;
+use Dax\Connection\DaxConnection;
+use Dax\Exception\DaxException;
+use Dax\Cache\KeySchemaCache;
+use Dax\Cache\AttributeListCache;
+use Dax\Encoder\DaxEncoder;
+use Dax\Decoder\DaxDecoder;
 
 /**
  * Handles the DAX protocol communication

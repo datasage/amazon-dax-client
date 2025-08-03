@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Amazon\Dax\Cache;
+namespace Dax\Cache;
 
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;

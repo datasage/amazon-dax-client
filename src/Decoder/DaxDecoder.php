@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Amazon\Dax\Decoder;
+namespace Dax\Decoder;
 
-use Amazon\Dax\Exception\DaxException;
+use Dax\Exception\DaxException;
 use CBOR\CBORObject;
 use CBOR\Decoder;
 use CBOR\StringStream;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Amazon\Dax\Client;
+namespace Dax\Client;
 
 /**
  * Interface for DAX client operations

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Amazon\Dax\Tests\Unit\Decoder;
+namespace Dax\Tests\Unit\Decoder;
 
-use Amazon\Dax\Decoder\DaxDecoder;
-use Amazon\Dax\Exception\DaxException;
+use Dax\Decoder\DaxDecoder;
+use Dax\Exception\DaxException;
 use CBOR\CBORObject;
 use CBOR\Decoder;
 use CBOR\StringStream;

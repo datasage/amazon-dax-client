@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Amazon\Dax;
+namespace Dax;
 
-use Amazon\Dax\Client\DaxClientInterface;
-use Amazon\Dax\Connection\ClusterManager;
-use Amazon\Dax\Exception\DaxException;
+use Dax\Client\DaxClientInterface;
+use Dax\Connection\ClusterManager;
+use Dax\Exception\DaxException;
 use Aws\Credentials\CredentialsInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;

@@ -28,12 +28,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Amazon\\Dax\\": "src/"
+            "Dax\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Amazon\\Dax\\Tests\\": "tests/"
+            "Dax\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "stable",

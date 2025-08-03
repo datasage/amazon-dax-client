@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Amazon\Dax\Tests\Unit\Encoder;
+namespace Dax\Tests\Unit\Encoder;
 
-use Amazon\Dax\Encoder\DaxEncoder;
-use Amazon\Dax\Exception\DaxException;
+use Dax\Encoder\DaxEncoder;
+use Dax\Exception\DaxException;
 use CBOR\CBORObject;
 use CBOR\MapObject;
 use CBOR\ListObject;

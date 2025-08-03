@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Amazon\Dax\Encoder;
+namespace Dax\Encoder;
 
-use Amazon\Dax\Exception\DaxException;
+use Dax\Exception\DaxException;
 use CBOR\CBORObject;
 use CBOR\MapObject;
 use CBOR\ListObject;
