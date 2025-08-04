@@ -7,7 +7,6 @@ namespace Dax;
 use Dax\Client\DaxClientInterface;
 use Dax\Connection\ClusterManager;
 use Dax\Exception\DaxException;
-use Aws\Credentials\CredentialsInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 

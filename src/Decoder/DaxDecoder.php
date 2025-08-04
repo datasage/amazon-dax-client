@@ -26,10 +26,10 @@ use CBOR\Tag;
 class DaxDecoder
 {
     // DAX CBOR tags for DynamoDB data types
-    private const TAG_DDB_STRING_SET = 258;
-    private const TAG_DDB_NUMBER_SET = 259;
-    private const TAG_DDB_BINARY_SET = 260;
-    private const TAG_DDB_DOCUMENT_PATH_ORDINAL = 261;
+    private const TAG_DDB_STRING_SET = 3321;
+    private const TAG_DDB_NUMBER_SET = 3322;
+    private const TAG_DDB_BINARY_SET = 3323;
+    private const TAG_DDB_DOCUMENT_PATH_ORDINAL = 3324;
 
     /**
      * Decode a response

@@ -27,9 +27,9 @@ class DaxEncoder
     private const DAX_SERVICE_ID = 1;
     
     // DAX CBOR tags for DynamoDB data types
-    private const TAG_DDB_STRING_SET = 258;
-    private const TAG_DDB_NUMBER_SET = 259;
-    private const TAG_DDB_BINARY_SET = 260;
+    private const TAG_DDB_STRING_SET = 3321;
+    private const TAG_DDB_NUMBER_SET = 3322;
+    private const TAG_DDB_BINARY_SET = 3323;
 
     /**
      * Encode a request for transmission

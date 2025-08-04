@@ -138,7 +138,7 @@ class DaxDecoderTest extends TestCase
         $listObject->add(TextStringObject::create('string1'));
         $listObject->add(TextStringObject::create('string2'));
 
-        $taggedObject = new GenericTag(25, pack('n', 258), $listObject); // TAG_DDB_STRING_SET = 258
+        $taggedObject = new GenericTag(25, pack('n', 3321), $listObject); // TAG_DDB_STRING_SET = 3321
 
         $result = $this->decoder->cborObjectToArray($taggedObject);
 
@@ -484,7 +484,7 @@ class DaxDecoderTest extends TestCase
         $listObject = ListObject::create();
         $listObject->add(TextStringObject::create('string1'));
 
-        $taggedObject = new GenericTag(25, pack('n', 258), $listObject); // TAG_DDB_STRING_SET = 258
+        $taggedObject = new GenericTag(25, pack('n', 3321), $listObject); // TAG_DDB_STRING_SET = 3321
 
         $result = $method->invoke($this->decoder, $taggedObject);
 
@@ -500,7 +500,7 @@ class DaxDecoderTest extends TestCase
         $listObject = ListObject::create();
         $listObject->add(TextStringObject::create('1'));
 
-        $taggedObject = new GenericTag(25, pack('n', 259), $listObject); // TAG_DDB_NUMBER_SET = 259
+        $taggedObject = new GenericTag(25, pack('n', 3322), $listObject); // TAG_DDB_NUMBER_SET = 3322
 
         $result = $method->invoke($this->decoder, $taggedObject);
 
@@ -516,7 +516,7 @@ class DaxDecoderTest extends TestCase
         $listObject = ListObject::create();
         $listObject->add(TextStringObject::create('binary1'));
 
-        $taggedObject = new GenericTag(25, pack('n', 260), $listObject); // TAG_DDB_BINARY_SET = 260
+        $taggedObject = new GenericTag(25, pack('n', 3323), $listObject); // TAG_DDB_BINARY_SET = 3323
 
         $result = $method->invoke($this->decoder, $taggedObject);
 
@@ -530,7 +530,7 @@ class DaxDecoderTest extends TestCase
         $method->setAccessible(true);
 
         $ordinalObject = UnsignedIntegerObject::create(456);
-        $taggedObject = new GenericTag(25, pack('n', 261), $ordinalObject); // TAG_DDB_DOCUMENT_PATH_ORDINAL = 261
+        $taggedObject = new GenericTag(25, pack('n', 3324), $ordinalObject); // TAG_DDB_DOCUMENT_PATH_ORDINAL = 3324
 
         $result = $method->invoke($this->decoder, $taggedObject);
 
