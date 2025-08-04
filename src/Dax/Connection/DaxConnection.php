@@ -13,7 +13,7 @@ class DaxConnection
 {
     private array $endpoint;
     private array $config;
-    private $socket = null;
+    private \Socket|null $socket = null;
     private bool $connected = false;
     private int $lastActivity;
     private int $requestCount = 0;
@@ -157,7 +157,7 @@ class DaxConnection
         $remaining = $length;
 
         while ($remaining > 0) {
-            $chunk = fread($this->socket, $remaining);
+            $chunk = socket_read($this->socket, $remaining);
             if ($chunk === false || $chunk === '') {
                 $meta = stream_get_meta_data($this->socket);
                 if ($meta['timed_out']) {
@@ -192,7 +192,7 @@ class DaxConnection
         $delimiterLength = strlen($delimiter);
 
         while (strlen($data) < $maxLength) {
-            $char = fread($this->socket, 1);
+            $char = socket_read($this->socket, 1);
             if ($char === false || $char === '') {
                 $meta = stream_get_meta_data($this->socket);
                 if ($meta['timed_out']) {
