@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Dax;
 
+use Aws\Credentials\CredentialsInterface;
 use Dax\Client\DaxClientInterface;
 use Dax\Connection\ClusterManager;
 use Dax\Exception\DaxException;
@@ -228,6 +229,17 @@ class AmazonDaxClient implements DaxClientInterface
 
         if (!empty($this->config['endpoint_url']) && !empty($this->config['endpoints'])) {
             throw new DaxException('Cannot specify both endpoint_url and endpoints');
+        }
+
+        // Require credentials to be provided and be a valid CredentialsInterface instance
+        if (!isset($this->config['credentials']) || 
+            $this->config['credentials'] === null || 
+            $this->config['credentials'] === '') {
+            throw new DaxException('Credentials must be provided');
+        }
+
+        if (!($this->config['credentials'] instanceof CredentialsInterface)) {
+            throw new DaxException('Credentials must be an instance of Aws\Credentials\CredentialsInterface');
         }
     }
 
