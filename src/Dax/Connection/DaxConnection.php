@@ -227,8 +227,7 @@ class DaxConnection
                 if ($meta['timed_out']) {
                     throw new DaxException('Timeout while receiving data from DAX node');
                 }
-
-                break;
+                throw new DaxException('Failed to receive data from DAX node');
             }
 
             $data .= $chunk;
