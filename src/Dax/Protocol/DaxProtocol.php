@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Dax\Protocol;
 
+use Dax\Auth\DaxAuthenticator;
 use Dax\Cache\AttributeListCache;
 use Dax\Cache\KeySchemaCache;
 use Dax\Connection\DaxConnection;
@@ -25,6 +26,7 @@ class DaxProtocol
     private DaxDecoder $decoder;
     private LoggerInterface $logger;
     private bool $debugLogging;
+    private ?DaxAuthenticator $authenticator;
 
     // DAX Method IDs (simplified subset from Python client)
     private const METHOD_IDS = [
@@ -47,8 +49,9 @@ class DaxProtocol
      *
      * @param array $config Protocol configuration
      * @param LoggerInterface|null $logger Logger instance
+     * @param DaxAuthenticator|null $authenticator Authenticator instance
      */
-    public function __construct(array $config, ?LoggerInterface $logger = null)
+    public function __construct(array $config, ?LoggerInterface $logger = null, ?DaxAuthenticator $authenticator = null)
     {
         $this->config = $config;
         $this->keySchemaCache = $config['key_schema_cache'] ?? null;
@@ -57,6 +60,7 @@ class DaxProtocol
         $this->decoder = new DaxDecoder();
         $this->logger = $logger ?? new NullLogger();
         $this->debugLogging = $config['debug_logging'] ?? false;
+        $this->authenticator = $authenticator;
     }
 
     /**
@@ -106,6 +110,11 @@ class DaxProtocol
                 'encoded_size_bytes' => strlen($encodedRequest),
                 'encoded_hex_preview' => substr(bin2hex($encodedRequest), 0, 100) . (strlen($encodedRequest) > 50 ? '...' : ''),
             ]);
+        }
+
+        // Send authentication if authenticator is available
+        if ($this->authenticator) {
+            $this->sendAuthentication($connection);
         }
 
         // Send the request
@@ -390,6 +399,55 @@ class DaxProtocol
         throw new DaxException('Unsupported attribute value type: ' . gettype($value));
     }
 
+    /**
+     * Send authentication request using CBOR encoding
+     *
+     * @param DaxConnection $connection DAX connection
+     * @throws DaxException
+     */
+    private function sendAuthentication(DaxConnection $connection): void
+    {
+        try {
+            $endpoint = $connection->getEndpoint();
+            $host = $endpoint['host'] . ':' . $endpoint['port'];
+            
+            // Generate signature information
+            $signature = $this->authenticator->generateSignature($host, '');
+            
+            if ($this->debugLogging) {
+                $this->logger->debug('DAX Protocol Authentication', [
+                    'host' => $host,
+                    'access_key' => substr($signature['access_key'] ?? '', 0, 8) . '...',
+                ]);
+            }
+            
+            // Following Python implementation: send CBOR-encoded authentication
+            // Method ID for authorizeConnection is 1489122155
+            $authRequest = $this->encoder->encodeAuthRequest(
+                1489122155, // authorizeConnection method ID
+                $signature['access_key'],
+                $signature['signature'],
+                $signature['string_to_sign'],
+                $signature['token'],
+                'DaxPHPClient-1.0' // user agent
+            );
+            
+            $connection->send($authRequest);
+            
+            // Read authentication response
+            $authResponse = $this->receiveResponse($connection);
+            $decodedAuthResponse = $this->decoder->decodeResponse('Auth', $authResponse);
+            
+            if ($this->debugLogging) {
+                $this->logger->debug('DAX Authentication Response', [
+                    'response_size' => strlen($authResponse),
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            throw new DaxException('Failed to send authentication: ' . $e->getMessage(), 0, $e);
+        }
+    }
 
     /**
      * Receive a response from the connection

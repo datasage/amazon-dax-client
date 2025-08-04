@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Dax\Connection;
 
+use Dax\Auth\DaxAuthenticator;
 use Dax\Cache\AttributeListCache;
 use Dax\Cache\KeySchemaCache;
 use Dax\Exception\DaxException;
@@ -23,6 +24,7 @@ class ClusterManager
     private ?DaxProtocol $protocol = null;
     private ?KeySchemaCache $keySchemaCache = null;
     private ?AttributeListCache $attributeListCache = null;
+    private ?DaxAuthenticator $authenticator = null;
     private bool $closed = false;
 
     /**
@@ -110,6 +112,7 @@ class ClusterManager
         try {
             $this->parseEndpoints();
             $this->initializeCaches();
+            $this->initializeAuthenticator();
             $this->initializeProtocol();
             $this->initializeConnectionPool();
             $this->discoverCluster();
@@ -197,6 +200,20 @@ class ClusterManager
     }
 
     /**
+     * Initialize the authenticator
+     */
+    private function initializeAuthenticator(): void
+    {
+        // Only initialize authenticator if credentials are provided
+        if (!empty($this->config['credentials']) || !empty($this->config['region'])) {
+            $this->authenticator = new DaxAuthenticator($this->config);
+            $this->logger->debug('DAX authenticator initialized');
+        } else {
+            $this->logger->debug('No credentials configured, skipping authenticator initialization');
+        }
+    }
+
+    /**
      * Initialize the DAX protocol handler
      */
     private function initializeProtocol(): void
@@ -207,7 +224,7 @@ class ClusterManager
             'key_schema_cache' => $this->keySchemaCache,
             'attribute_list_cache' => $this->attributeListCache,
             'debug_logging' => $this->config['debug_logging'] ?? false,
-        ], $this->logger);
+        ], $this->logger, $this->authenticator);
     }
 
     /**
