@@ -205,7 +205,7 @@ class ClusterManager
     private function initializeAuthenticator(): void
     {
         // Only initialize authenticator if credentials are provided
-        if (!empty($this->config['credentials']) || !empty($this->config['region'])) {
+        if (!empty($this->config['credentials'])) {
             $this->authenticator = new DaxAuthenticator($this->config);
             $this->logger->debug('DAX authenticator initialized');
         } else {

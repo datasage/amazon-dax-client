@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dax\Auth;
 
-use Aws\Credentials\CredentialProvider;
 use Aws\Credentials\CredentialsInterface;
 use Aws\Signature\SignatureV4;
 use Dax\Exception\DaxException;
@@ -14,10 +15,9 @@ use Psr\Http\Message\RequestInterface;
  */
 class DaxAuthenticator
 {
-    private $credentialProvider;
-    private $signer;
-    private $region;
-    private $credentials;
+    private SignatureV4 $signer;
+    private string $region;
+    private ?CredentialsInterface $credentials = null;
 
     /**
      * Constructor
@@ -28,12 +28,12 @@ class DaxAuthenticator
     {
         $this->region = $config['region'] ?? 'us-east-1';
         
-        // Initialize credential provider
-        if (isset($config['credentials']) && $config['credentials'] instanceof CredentialsInterface) {
-            $this->credentials = $config['credentials'];
-        } else {
-            $this->credentialProvider = CredentialProvider::defaultProvider($config);
+        // Require explicit credentials
+        if (!isset($config['credentials']) || !($config['credentials'] instanceof CredentialsInterface)) {
+            throw new DaxException('Credentials must be provided via config');
         }
+        
+        $this->credentials = $config['credentials'];
         
         // Initialize signature v4 signer for DAX service
         $this->signer = new SignatureV4('dax', $this->region);
@@ -43,25 +43,10 @@ class DaxAuthenticator
      * Get AWS credentials
      *
      * @return CredentialsInterface
-     * @throws DaxException
      */
     public function getCredentials(): CredentialsInterface
     {
-        if ($this->credentials) {
-            return $this->credentials;
-        }
-
-        if ($this->credentialProvider) {
-            try {
-                $promise = $this->credentialProvider();
-                $this->credentials = $promise->wait();
-                return $this->credentials;
-            } catch (\Exception $e) {
-                throw new DaxException('Failed to resolve AWS credentials: ' . $e->getMessage(), 0, $e);
-            }
-        }
-
-        throw new DaxException('No credentials available');
+        return $this->credentials;
     }
 
     /**
@@ -69,7 +54,7 @@ class DaxAuthenticator
      *
      * @param string $host DAX endpoint host
      * @param string $payload Request payload
-     * @return array Authentication headers
+     * @return array<string, string> Authentication headers
      * @throws DaxException
      */
     public function generateAuthHeaders(string $host, string $payload): array
@@ -111,7 +96,7 @@ class DaxAuthenticator
      *
      * @param string $host DAX endpoint host
      * @param string $payload Request payload
-     * @return array Signature information
+     * @return array{access_key: string, signature: string, string_to_sign: string, token: string|null, host: string} Signature information
      * @throws DaxException
      */
     public function generateSignature(string $host, string $payload): array
