@@ -3,9 +3,9 @@
 require_once __DIR__ . '/vendor/autoload.php';
 
 use Dax\AmazonDaxClient;
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
 use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 // Create a logger instance with detailed formatting for debug output
 $logger = new Logger('dax-client');

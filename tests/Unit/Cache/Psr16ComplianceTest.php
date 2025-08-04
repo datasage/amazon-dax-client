@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Dax\Tests\Unit\Cache;
 
-use Dax\Cache\KeySchemaCache;
 use Dax\Cache\AttributeListCache;
+use Dax\Cache\KeySchemaCache;
 use PHPUnit\Framework\TestCase;
 use Psr\SimpleCache\CacheInterface;
 

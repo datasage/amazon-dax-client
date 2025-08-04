@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Dax\Connection;
 
+use Dax\Cache\AttributeListCache;
+use Dax\Cache\KeySchemaCache;
 use Dax\Exception\DaxException;
 use Dax\Protocol\DaxProtocol;
-use Dax\Cache\KeySchemaCache;
-use Dax\Cache\AttributeListCache;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 

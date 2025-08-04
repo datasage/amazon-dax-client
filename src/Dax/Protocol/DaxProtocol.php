@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Dax\Protocol;
 
-use Dax\Connection\DaxConnection;
-use Dax\Exception\DaxException;
-use Dax\Cache\KeySchemaCache;
 use Dax\Cache\AttributeListCache;
-use Dax\Encoder\DaxEncoder;
+use Dax\Cache\KeySchemaCache;
+use Dax\Connection\DaxConnection;
 use Dax\Decoder\DaxDecoder;
+use Dax\Encoder\DaxEncoder;
+use Dax\Exception\DaxException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 

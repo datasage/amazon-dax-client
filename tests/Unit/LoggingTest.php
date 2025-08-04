@@ -4,9 +4,9 @@ namespace Dax\Tests\Unit;
 
 use Dax\AmazonDaxClient;
 use Dax\Connection\ClusterManager;
-use Monolog\Logger;
 use Monolog\Handler\TestHandler;
 use Monolog\Level;
+use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
 
 class LoggingTest extends TestCase

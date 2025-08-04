@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Dax\Decoder;
 
-use Dax\Exception\DaxException;
 use CBOR\CBORObject;
 use CBOR\Decoder;
-use CBOR\StringStream;
-use CBOR\MapObject;
 use CBOR\ListObject;
-use CBOR\TextStringObject;
-use CBOR\UnsignedIntegerObject;
+use CBOR\MapObject;
 use CBOR\NegativeIntegerObject;
-use CBOR\OtherObject\TrueObject;
 use CBOR\OtherObject\FalseObject;
 use CBOR\OtherObject\NullObject;
+use CBOR\OtherObject\TrueObject;
+use CBOR\StringStream;
 use CBOR\Tag;
+use CBOR\TextStringObject;
+use CBOR\UnsignedIntegerObject;
+use Dax\Exception\DaxException;
 
 /**
  * DAX Protocol Decoder

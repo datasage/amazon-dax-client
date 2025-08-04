@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Dax\Encoder;
 
-use Dax\Exception\DaxException;
 use CBOR\CBORObject;
-use CBOR\MapObject;
 use CBOR\ListObject;
-use CBOR\TextStringObject;
-use CBOR\UnsignedIntegerObject;
+use CBOR\MapObject;
 use CBOR\NegativeIntegerObject;
-use CBOR\OtherObject\TrueObject;
 use CBOR\OtherObject\FalseObject;
 use CBOR\OtherObject\NullObject;
+use CBOR\OtherObject\TrueObject;
 use CBOR\Tag\GenericTag;
+use CBOR\TextStringObject;
+use CBOR\UnsignedIntegerObject;
+use Dax\Exception\DaxException;
 
 /**
  * DAX Protocol Encoder
