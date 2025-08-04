@@ -220,7 +220,7 @@ class ClusterManager
     {
         $this->protocol = new DaxProtocol([
             'region' => $this->config['region'],
-            'credentials' => $this->config['credentials'],
+            'credentials' => $this->config['credentials'] ?? null,
             'key_schema_cache' => $this->keySchemaCache,
             'attribute_list_cache' => $this->attributeListCache,
             'debug_logging' => $this->config['debug_logging'] ?? false,
@@ -234,12 +234,12 @@ class ClusterManager
     {
         $this->connectionPool = new ConnectionPool([
             'endpoints' => $this->endpoints,
-            'connect_timeout' => $this->config['connect_timeout'],
-            'request_timeout' => $this->config['request_timeout'],
-            'max_pending_connections_per_host' => $this->config['max_pending_connections_per_host'],
-            'max_concurrent_requests_per_connection' => $this->config['max_concurrent_requests_per_connection'],
-            'idle_timeout' => $this->config['idle_timeout'],
-            'skip_hostname_verification' => $this->config['skip_hostname_verification'],
+            'connect_timeout' => $this->config['connect_timeout'] ?? 5000,
+            'request_timeout' => $this->config['request_timeout'] ?? 60000,
+            'max_pending_connections_per_host' => $this->config['max_pending_connections_per_host'] ?? 10,
+            'max_concurrent_requests_per_connection' => $this->config['max_concurrent_requests_per_connection'] ?? 5,
+            'idle_timeout' => $this->config['idle_timeout'] ?? 30000,
+            'skip_hostname_verification' => $this->config['skip_hostname_verification'] ?? false,
         ]);
     }
 
