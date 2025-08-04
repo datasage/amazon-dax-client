@@ -1,0 +1,48 @@
+name: Code Style
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  php-cs-fixer:
+    runs-on: ubuntu-latest
+    
+    name: PHP CS Fixer
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: json, openssl
+        coverage: none
+        
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+      
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-8.2-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-8.2-
+          
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+      
+    - name: Run PHP CS Fixer (dry-run)
+      run: ./vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
+      
+    - name: Check for code style violations
+      if: failure()
+      run: |
+        echo "❌ Code style violations found!"
+        echo "To fix these issues locally, run: ./vendor/bin/php-cs-fixer fix"
+        exit 1

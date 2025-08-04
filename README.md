@@ -2,6 +2,28 @@
 
 A PHP implementation of the Amazon DynamoDB Accelerator (DAX) client, providing high-performance caching for DynamoDB operations.
 
+This is currently in development and should not be used. It will be ready for use once a release is published.
+
+## Recent Improvements
+
+This implementation has undergone significant improvements and fixes:
+
+### Security & Authentication Enhancements
+- **Host Restriction**: All AWS SigV4 authentication signatures now use the canonical `dax.amazonaws.com` endpoint for enhanced security
+- **Authentication Fixes**: Resolved host header formatting issues, hardcoded endpoint problems, and improved SigV4 compliance
+- **Canonical Request Building**: Enhanced canonical request building with proper header handling and alphabetical sorting
+
+### Protocol & Compatibility Fixes
+- **CBOR Tag Correction**: Fixed CBOR tag values to match AWS official specification (3321-3324 instead of 258-261)
+- **DAX-Specific CBOR Support**: Full implementation of DAX-specific CBOR encoding/decoding with support for DynamoDB sets (SS, NS, BS)
+- **Protocol Compliance**: Improved compatibility with official AWS DAX protocol specification
+
+### Implementation Completeness
+- **Full DynamoDB Operations**: Support for all DynamoDB operations including batch operations, queries, and scans
+- **Advanced Caching**: Key schema caching with TTL and attribute list caching with LRU eviction
+- **Connection Management**: Robust connection pooling, health checking, and cluster discovery
+- **Comprehensive Testing**: 26+ unit tests with full coverage of core functionality
+
 ## Requirements
 
 - PHP 8.1 or newer
@@ -13,7 +35,7 @@ A PHP implementation of the Amazon DynamoDB Accelerator (DAX) client, providing 
 ## Installation
 
 ```bash
-composer require amazon/dax-client
+composer require datasage/amazon-dax-client
 ```
 
 ## Basic Usage
@@ -266,10 +288,6 @@ The client consists of several key components:
 - **DaxConnection**: Individual connection to DAX nodes
 - **DaxProtocol**: Handles DAX protocol communication
 - **Caches**: Key schema and attribute list caching
-
-## License
-
-This project is licensed under the Apache License 2.0 - see the LICENSE file for details.
 
 ## Contributing
 
