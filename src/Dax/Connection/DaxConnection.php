@@ -163,6 +163,8 @@ class DaxConnection
                 if ($meta['timed_out']) {
                     throw new DaxException('Timeout while receiving data from DAX node');
                 }
+
+                break;
             }
 
             $data .= $chunk;
