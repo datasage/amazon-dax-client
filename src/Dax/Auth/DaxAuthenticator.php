@@ -50,52 +50,6 @@ class DaxAuthenticator
     }
 
     /**
-     * Generate authentication headers for DAX request
-     * Note: Always uses dax.amazonaws.com as the canonical host for security
-     *
-     * @param string $host DAX endpoint host (ignored - always uses dax.amazonaws.com)
-     * @param string $payload Request payload
-     * @return array<string, string> Authentication headers
-     * @throws DaxException
-     */
-    public function generateAuthHeaders(string $host, string $payload): array
-    {
-        try {
-            $credentials = $this->getCredentials();
-
-            // Always use dax.amazonaws.com as the canonical host for security
-            $canonicalHost = 'dax.amazonaws.com';
-
-            // Create a PSR-7 request for signing
-            $request = new Request(
-                'POST',
-                'https://' . $canonicalHost . '/',
-                [
-                    'Host' => $canonicalHost,
-                    'Content-Type' => 'application/x-amz-cbor-1.1',
-                ],
-                $payload,
-            );
-
-            // Sign the request
-            $signedRequest = $this->signer->signRequest($request, $credentials);
-
-            // Extract headers needed for DAX
-            $headers = [];
-            foreach ($signedRequest->getHeaders() as $name => $values) {
-                $lowerName = strtolower($name);
-                if (in_array($lowerName, ['authorization', 'x-amz-date', 'x-amz-security-token'])) {
-                    $headers[$name] = is_array($values) ? $values[0] : $values;
-                }
-            }
-
-            return $headers;
-        } catch (\Exception $e) {
-            throw new DaxException('Failed to generate authentication headers: ' . $e->getMessage(), 0, $e);
-        }
-    }
-
-    /**
      * Generate signature information similar to Python implementation
      * Note: Always uses dax.amazonaws.com as the canonical host for security
      *

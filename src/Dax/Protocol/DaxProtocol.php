@@ -76,6 +76,11 @@ class DaxProtocol
      */
     public function executeRequest(DaxConnection $connection, string $operation, array $request): array
     {
+        // Send authentication if authenticator is available and auth has expired or not been sent yet
+        if ($this->authenticator && $this->isAuthExpired()) {
+            $this->sendAuthentication($connection);
+        }
+
         $methodId = self::METHOD_IDS[$operation] ?? null;
         if ($methodId === null) {
             throw new DaxException("Unsupported operation: {$operation}");
@@ -112,11 +117,6 @@ class DaxProtocol
                 'encoded_size_bytes' => strlen($encodedRequest),
                 'encoded_hex_preview' => substr(bin2hex($encodedRequest), 0, 100) . (strlen($encodedRequest) > 50 ? '...' : ''),
             ]);
-        }
-
-        // Send authentication if authenticator is available and auth has expired or not been sent yet
-        if ($this->authenticator && $this->isAuthExpired()) {
-            $this->sendAuthentication($connection);
         }
 
         // Send the request

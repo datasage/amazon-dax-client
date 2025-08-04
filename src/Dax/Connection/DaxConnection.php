@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Dax\Connection;
 
+use CBOR\CBORObject;
 use Dax\Encoder\DaxEncoder;
 use Dax\Exception\DaxException;
 
@@ -18,6 +19,7 @@ class DaxConnection
     private array $endpoint;
     private array $config;
     private DaxEncoder $encoder;
+    /** @var resource */
     private $socket = null;
     private bool $connected = false;
     private int $lastActivity;
@@ -129,10 +131,10 @@ class DaxConnection
     /**
      * Send a CBOR object over the socket
      *
-     * @param \CBOR\CBORObject $cborObject CBOR object to send
+     * @param CBORObject $cborObject CBOR object to send
      * @throws DaxException
      */
-    private function sendCborObject(\CBOR\CBORObject $cborObject): void
+    private function sendCborObject(CBORObject $cborObject): void
     {
         $data = $cborObject->__toString();
         $written = fwrite($this->socket, $data);
