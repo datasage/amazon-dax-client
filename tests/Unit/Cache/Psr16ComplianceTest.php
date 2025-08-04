@@ -89,7 +89,7 @@ class Psr16ComplianceTest extends TestCase
         // Test getMultiple
         $result = $cache->getMultiple(['key1', 'key2', 'nonexistent'], 'default');
         $expected = ['key1' => 'value1', 'key2' => 'value2', 'nonexistent' => 'default'];
-        $this->assertEquals($expected, iterator_to_array($result));
+        $this->assertEquals($expected, $result);
 
         // Test deleteMultiple
         $this->assertTrue($cache->deleteMultiple(['key1', 'key3']));
