@@ -46,19 +46,46 @@ class DaxDecoder
         }
 
         try {
-            // Use CBOR decoding for the response
+            // The Go implementation sends responses in format:
+            // [CBOR_ERROR_ARRAY][CBOR_RESPONSE_DATA]
             $decoder = Decoder::create();
             $stream = StringStream::create($response);
-            $cborObject = $decoder->decode($stream);
-
-            // Convert CBOR object to PHP array
-            $decoded = $this->cborObjectToArray($cborObject);
-
-            if (!is_array($decoded)) {
-                throw new DaxException('Invalid response format: expected array');
+            
+            // First, decode the error array
+            $errorObject = $decoder->decode($stream);
+            $errorArray = $this->cborObjectToArray($errorObject);
+            
+            // Check if there are errors
+            if (is_array($errorArray) && !empty($errorArray)) {
+                // Handle error response
+                $errorMessage = 'DAX server error';
+                if (count($errorArray) > 1 && is_string($errorArray[1])) {
+                    $errorMessage = $errorArray[1];
+                }
+                throw new DaxException($errorMessage);
             }
-
-            return $this->convertResponseAttributeValues($decoded);
+            
+            // If no errors, try to decode the response data
+            try {
+                $responseObject = $decoder->decode($stream);
+                $decoded = $this->cborObjectToArray($responseObject);
+                
+                if (!is_array($decoded)) {
+                    throw new DaxException('Invalid response format: expected array');
+                }
+                
+                return $this->convertResponseAttributeValues($decoded);
+            } catch (DaxException $e) {
+                // Re-throw DaxExceptions
+                throw $e;
+            } catch (\Exception $e) {
+                // If we can't decode more data, it means there's no response data
+                // This is valid for some operations that only return error status
+                return [];
+            }
+        } catch (DaxException $e) {
+            // Re-throw DaxExceptions
+            throw $e;
         } catch (\Exception $e) {
             throw new DaxException('Failed to decode DAX response: ' . $e->getMessage(), 0, $e);
         }

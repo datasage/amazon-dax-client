@@ -400,20 +400,24 @@ class DaxProtocol
      */
     private function receiveResponse(DaxConnection $connection): string
     {
-        // Read response header (8 bytes: status + length)
-        $header = $connection->receive(8);
-        $headerData = unpack('Nstatus/Nlength', $header);
-
-        if ($headerData['status'] !== 0) {
-            throw new DaxException("DAX request failed with status: {$headerData['status']}");
-        }
-
-        // Read response payload
-        if ($headerData['length'] > 0) {
-            return $connection->receive($headerData['length']);
-        }
-
-        return '';
+        // The Go implementation uses pure CBOR format:
+        // [CBOR_ERROR_ARRAY][CBOR_RESPONSE_DATA]
+        // We need to read the entire CBOR stream and handle errors within the decoder
+        
+        // Read initial bytes to determine response size
+        // CBOR responses are variable length, so we need to read incrementally
+        $buffer = '';
+        $chunkSize = 1024; // Read in 1KB chunks
+        
+        do {
+            $chunk = $connection->receive($chunkSize);
+            if ($chunk === '') {
+                break; // No more data
+            }
+            $buffer .= $chunk;
+        } while (strlen($chunk) === $chunkSize);
+        
+        return $buffer;
     }
 
 

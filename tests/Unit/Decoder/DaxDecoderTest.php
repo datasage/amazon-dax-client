@@ -45,8 +45,9 @@ class DaxDecoderTest extends TestCase
         $this->expectException(DaxException::class);
         $this->expectExceptionMessage('Failed to decode DAX response');
 
-        // Invalid CBOR data
-        $this->decoder->decodeResponse('GetItem', 'invalid cbor data');
+        // Invalid CBOR data - use binary data that will cause CBOR parsing to fail
+        $invalidCbor = "\xFF\xFF\xFF\xFF"; // Invalid CBOR bytes
+        $this->decoder->decodeResponse('GetItem', $invalidCbor);
     }
 
     public function testDecodeResponseThrowsExceptionOnNonArrayResult(): void
@@ -54,9 +55,13 @@ class DaxDecoderTest extends TestCase
         $this->expectException(DaxException::class);
         $this->expectExceptionMessage('Invalid response format: expected array');
 
+        // Create Go protocol format: [CBOR_ERROR_ARRAY][CBOR_RESPONSE_DATA]
+        // Empty error array (no error)
+        $errorArray = ListObject::create();
+        
         // Create CBOR that decodes to a string instead of array
         $textObject = TextStringObject::create('not an array');
-        $cborData = (string) $textObject;
+        $cborData = (string) $errorArray . (string) $textObject;
 
         $this->decoder->decodeResponse('GetItem', $cborData);
     }
@@ -553,12 +558,16 @@ class DaxDecoderTest extends TestCase
 
     public function testDecodeResponseWithValidCborArray(): void
     {
-        // Create a simple CBOR array
+        // Create Go protocol format: [CBOR_ERROR_ARRAY][CBOR_RESPONSE_DATA]
+        // Empty error array (no error)
+        $errorArray = ListObject::create();
+        
+        // Response data
         $mapObject = MapObject::create();
         $mapObject->add(TextStringObject::create('name'), TextStringObject::create('John'));
         $mapObject->add(TextStringObject::create('age'), UnsignedIntegerObject::create(30));
 
-        $cborData = (string) $mapObject;
+        $cborData = (string) $errorArray . (string) $mapObject;
 
         $result = $this->decoder->decodeResponse('GetItem', $cborData);
 
@@ -567,6 +576,10 @@ class DaxDecoderTest extends TestCase
 
     public function testDecodeResponseWithDynamoDbAttributes(): void
     {
+        // Create Go protocol format: [CBOR_ERROR_ARRAY][CBOR_RESPONSE_DATA]
+        // Empty error array (no error)
+        $errorArray = ListObject::create();
+        
         // Create CBOR with DynamoDB attributes
         $mapObject = MapObject::create();
 
@@ -580,7 +593,7 @@ class DaxDecoderTest extends TestCase
         $numberAttr->add(TextStringObject::create('N'), TextStringObject::create('30'));
         $mapObject->add(TextStringObject::create('age'), $numberAttr);
 
-        $cborData = (string) $mapObject;
+        $cborData = (string) $errorArray . (string) $mapObject;
 
         $result = $this->decoder->decodeResponse('GetItem', $cborData);
 
