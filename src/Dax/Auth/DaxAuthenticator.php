@@ -51,8 +51,9 @@ class DaxAuthenticator
 
     /**
      * Generate authentication headers for DAX request
+     * Note: Always uses dax.amazonaws.com as the canonical host for security
      *
-     * @param string $host DAX endpoint host
+     * @param string $host DAX endpoint host (ignored - always uses dax.amazonaws.com)
      * @param string $payload Request payload
      * @return array<string, string> Authentication headers
      * @throws DaxException
@@ -62,12 +63,15 @@ class DaxAuthenticator
         try {
             $credentials = $this->getCredentials();
             
+            // Always use dax.amazonaws.com as the canonical host for security
+            $canonicalHost = 'dax.amazonaws.com';
+            
             // Create a PSR-7 request for signing
             $request = new Request(
                 'POST',
-                'https://' . $host . '/',
+                'https://' . $canonicalHost . '/',
                 [
-                    'Host' => $host,
+                    'Host' => $canonicalHost,
                     'Content-Type' => 'application/x-amz-cbor-1.1'
                 ],
                 $payload
@@ -93,8 +97,8 @@ class DaxAuthenticator
 
     /**
      * Generate signature information similar to Python implementation
+     * Note: Always uses dax.amazonaws.com as the canonical host for security
      *
-     * @param string $host DAX endpoint host
      * @param string $payload Request payload
      * @return array{access_key: string, signature: string, string_to_sign: string, token: string|null} Signature information
      * @throws DaxException
@@ -104,12 +108,15 @@ class DaxAuthenticator
         try {
             $credentials = $this->getCredentials();
             
+            // Always use dax.amazonaws.com as the canonical host for security
+            $canonicalHost = 'dax.amazonaws.com';
+            
             // Create a PSR-7 request for signing
             $request = new Request(
                 'POST',
-                'https://dax.amazonaws.com',
+                'https://' . $canonicalHost . '/',
                 [
-                    'Host' => 'https://dax.amazonaws.com',
+                    'Host' => $canonicalHost,
                     'Content-Type' => 'application/x-amz-cbor-1.1'
                 ],
                 $payload
@@ -156,9 +163,43 @@ class DaxAuthenticator
         $method = $request->getMethod();
         $uri = '/';
         $query = '';
-        $headers = "host:" . $request->getHeaderLine('Host') . "\n" .
-                  "x-amz-date:" . $request->getHeaderLine('X-Amz-Date') . "\n";
-        $signedHeaders = 'host;x-amz-date';
+        
+        // Build canonical headers - must be sorted alphabetically
+        $canonicalHeaders = [];
+        $signedHeaderNames = [];
+        
+        // Always include host and x-amz-date
+        $canonicalHeaders['host'] = $request->getHeaderLine('Host');
+        $signedHeaderNames[] = 'host';
+        
+        if ($request->hasHeader('X-Amz-Date')) {
+            $canonicalHeaders['x-amz-date'] = $request->getHeaderLine('X-Amz-Date');
+            $signedHeaderNames[] = 'x-amz-date';
+        }
+        
+        // Include content-type if present
+        if ($request->hasHeader('Content-Type')) {
+            $canonicalHeaders['content-type'] = $request->getHeaderLine('Content-Type');
+            $signedHeaderNames[] = 'content-type';
+        }
+        
+        // Include security token if present
+        if ($request->hasHeader('X-Amz-Security-Token')) {
+            $canonicalHeaders['x-amz-security-token'] = $request->getHeaderLine('X-Amz-Security-Token');
+            $signedHeaderNames[] = 'x-amz-security-token';
+        }
+        
+        // Sort headers alphabetically
+        ksort($canonicalHeaders);
+        sort($signedHeaderNames);
+        
+        // Build canonical headers string
+        $headers = '';
+        foreach ($canonicalHeaders as $name => $value) {
+            $headers .= $name . ':' . $value . "\n";
+        }
+        
+        $signedHeaders = implode(';', $signedHeaderNames);
         $payload = (string) $request->getBody();
         $payloadHash = hash('sha256', $payload);
         

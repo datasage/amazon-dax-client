@@ -429,7 +429,7 @@ class DaxProtocol
     private function sendAuthentication(DaxConnection $connection): void
     {
         try {
-            // Generate signature information
+            // Generate signature information (always uses dax.amazonaws.com as canonical host)
             $signature = $this->authenticator->generateSignature();
             
             if ($this->debugLogging) {
