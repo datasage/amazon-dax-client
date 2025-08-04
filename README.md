@@ -4,25 +4,7 @@ A PHP implementation of the Amazon DynamoDB Accelerator (DAX) client, providing 
 
 This is currently in development and should not be used. It will be ready for use once a release is published.
 
-## Recent Improvements
-
-This implementation has undergone significant improvements and fixes:
-
-### Security & Authentication Enhancements
-- **Host Restriction**: All AWS SigV4 authentication signatures now use the canonical `dax.amazonaws.com` endpoint for enhanced security
-- **Authentication Fixes**: Resolved host header formatting issues, hardcoded endpoint problems, and improved SigV4 compliance
-- **Canonical Request Building**: Enhanced canonical request building with proper header handling and alphabetical sorting
-
-### Protocol & Compatibility Fixes
-- **CBOR Tag Correction**: Fixed CBOR tag values to match AWS official specification (3321-3324 instead of 258-261)
-- **DAX-Specific CBOR Support**: Full implementation of DAX-specific CBOR encoding/decoding with support for DynamoDB sets (SS, NS, BS)
-- **Protocol Compliance**: Improved compatibility with official AWS DAX protocol specification
-
-### Implementation Completeness
-- **Full DynamoDB Operations**: Support for all DynamoDB operations including batch operations, queries, and scans
-- **Advanced Caching**: Key schema caching with TTL and attribute list caching with LRU eviction
-- **Connection Management**: Robust connection pooling, health checking, and cluster discovery
-- **Comprehensive Testing**: 26+ unit tests with full coverage of core functionality
+This implementation is based on the python and go clients and is not directly supported by AWS in any way.
 
 ## Requirements
 
@@ -234,24 +216,6 @@ try {
     $client->close();
 }
 ```
-
-## Caching
-
-The DAX client includes built-in caching for:
-
-- **Key Schemas**: Cached with TTL to avoid repeated schema lookups
-- **Attribute Lists**: LRU cache for attribute name mappings
-
-Cache statistics can be accessed through the internal cache objects (advanced usage).
-
-## Differences from Python Client
-
-This PHP implementation provides the same core functionality as the Python DAX client with some differences:
-
-1. **Simplified Protocol**: Uses a simplified protocol implementation (full CBOR support would require additional dependencies)
-2. **PHP-specific Features**: Leverages PHP 8.1+ features like typed properties and union types
-3. **Error Handling**: Uses PHP exceptions with DAX-specific error information
-4. **Configuration**: PHP-style associative arrays for configuration
 
 ## Development
 
