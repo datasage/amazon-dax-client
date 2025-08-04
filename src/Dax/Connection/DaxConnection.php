@@ -14,7 +14,7 @@ use Dax\Exception\DaxException;
 class DaxConnection
 {
     private const MAGIC = 'J7yne5G';
-    private const USER_AGENT = 'DaxPHPClient-1.0';
+    public const USER_AGENT = 'DaxPHPClient-1.0';
     
     private array $endpoint;
     private array $config;

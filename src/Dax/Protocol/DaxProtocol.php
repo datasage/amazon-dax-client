@@ -436,7 +436,6 @@ class DaxProtocol
                 $this->logger->debug('DAX Protocol Authentication', $signature);
             }
 
-            // Following Python implementation: send CBOR-encoded authentication
             // Method ID for authorizeConnection is 1489122155
             $authRequest = $this->encoder->encodeAuthRequest(
                 1489122155, // authorizeConnection method ID
@@ -444,7 +443,7 @@ class DaxProtocol
                 $signature['signature'],
                 $signature['string_to_sign'],
                 $signature['token'],
-                'DaxPHPClient-1.0', // user agent
+                DaxConnection::USER_AGENT, // user agent
             );
 
             $connection->send($authRequest);
