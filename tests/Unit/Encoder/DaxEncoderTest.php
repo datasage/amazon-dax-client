@@ -37,16 +37,15 @@ class DaxEncoderTest extends TestCase
 
         $result = $this->encoder->encodeRequest($methodId, $request);
 
-        // Check that result starts with method ID and length
+        // Check that result is a string with CBOR-encoded data
         $this->assertIsString($result);
-        $this->assertGreaterThan(8, strlen($result)); // At least header (8 bytes) + payload
+        $this->assertGreaterThan(0, strlen($result));
 
-        // Verify header format: [method_id:4][length:4][payload]
-        $header = substr($result, 0, 8);
-        $headerData = unpack('Nmethod_id/Nlength', $header);
-
-        $this->assertEquals($methodId, $headerData['method_id']);
-        $this->assertEquals(strlen($result) - 8, $headerData['length']);
+        // Verify the result starts with service ID (1) and method ID (123) in CBOR format
+        // Service ID 1 in CBOR: 0x01
+        // Method ID 123 in CBOR: 0x187B (positive integer)
+        $this->assertEquals(chr(0x01), substr($result, 0, 1)); // Service ID = 1
+        $this->assertEquals(chr(0x18) . chr(0x7B), substr($result, 1, 2)); // Method ID = 123
     }
 
     public function testEncodeRequestThrowsExceptionOnError(): void
@@ -336,13 +335,12 @@ class DaxEncoderTest extends TestCase
         $result = $this->encoder->encodeRequest($methodId, $request);
 
         $this->assertIsString($result);
-        $this->assertGreaterThan(8, strlen($result));
+        $this->assertGreaterThan(0, strlen($result));
 
-        // Verify header
-        $header = substr($result, 0, 8);
-        $headerData = unpack('Nmethod_id/Nlength', $header);
-
-        $this->assertEquals($methodId, $headerData['method_id']);
-        $this->assertEquals(strlen($result) - 8, $headerData['length']);
+        // Verify the result starts with service ID (1) and method ID (263244906) in CBOR format
+        // Service ID 1 in CBOR: 0x01
+        // Method ID 263244906 in CBOR: 0x1A0FB4BFEA (positive integer, 4 bytes)
+        $this->assertEquals(chr(0x01), substr($result, 0, 1)); // Service ID = 1
+        $this->assertEquals(chr(0x1A) . pack('N', 263244906), substr($result, 1, 5)); // Method ID = 263244906
     }
 }

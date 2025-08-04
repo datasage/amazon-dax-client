@@ -23,6 +23,9 @@ use CBOR\Tag\GenericTag;
  */
 class DaxEncoder
 {
+    // DAX service ID constant
+    private const DAX_SERVICE_ID = 1;
+    
     // DAX CBOR tags for DynamoDB data types
     private const TAG_DDB_STRING_SET = 258;
     private const TAG_DDB_NUMBER_SET = 259;
@@ -39,12 +42,17 @@ class DaxEncoder
     public function encodeRequest(int $methodId, array $request): string
     {
         try {
-            // Convert PHP array to CBOR object and encode
-            $cborObject = $this->arrayToCborObject($request);
-            $payload = (string) $cborObject;
-
-            // DAX protocol: [method_id:4][length:4][payload]
-            return pack('NN', $methodId, strlen($payload)) . $payload;
+            // Create CBOR objects for service ID and method ID
+            $serviceIdObject = UnsignedIntegerObject::create(self::DAX_SERVICE_ID);
+            $methodIdObject = $methodId >= 0 ? 
+                UnsignedIntegerObject::create($methodId) : 
+                NegativeIntegerObject::create($methodId);
+            
+            // Convert request parameters to CBOR object
+            $requestObject = $this->arrayToCborObject($request);
+            
+            // Encode all components as CBOR
+            return (string) $serviceIdObject . (string) $methodIdObject . (string) $requestObject;
         } catch (\Exception $e) {
             throw new DaxException('Failed to encode request: ' . $e->getMessage(), 0, $e);
         }
