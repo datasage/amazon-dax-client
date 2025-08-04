@@ -13,7 +13,6 @@
     "require": {
         "php": ">=8.1",
         "ext-json": "*",
-        "ext-sockets": "*",
         "ext-openssl": "*",
         "aws/aws-sdk-php": "^3.0",
         "psr/log": "^3.0",

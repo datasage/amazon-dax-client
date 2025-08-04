@@ -163,7 +163,6 @@ class DaxConnection
                 if ($meta['timed_out']) {
                     throw new DaxException('Timeout while receiving data from DAX node');
                 }
-                throw new DaxException('Failed to receive data from DAX node');
             }
 
             $data .= $chunk;
@@ -172,46 +171,6 @@ class DaxConnection
 
         $this->lastActivity = time();
         return $data;
-    }
-
-    /**
-     * Receive data until a specific delimiter is found
-     *
-     * @param string $delimiter Delimiter to look for
-     * @param int $maxLength Maximum length to read
-     * @return string Received data (without delimiter)
-     * @throws DaxException
-     */
-    public function receiveUntil(string $delimiter, int $maxLength = 8192): string
-    {
-        if (!$this->isConnected()) {
-            throw new DaxException('Connection is not active');
-        }
-
-        $data = '';
-        $delimiterLength = strlen($delimiter);
-
-        while (strlen($data) < $maxLength) {
-            $char = fread($this->socket, 1);
-            if ($char === false || $char === '') {
-                $meta = stream_get_meta_data($this->socket);
-                if ($meta['timed_out']) {
-                    throw new DaxException('Timeout while receiving data from DAX node');
-                }
-                throw new DaxException('Failed to receive data from DAX node');
-            }
-
-            $data .= $char;
-
-            // Check if we've found the delimiter
-            if (strlen($data) >= $delimiterLength &&
-                substr($data, -$delimiterLength) === $delimiter) {
-                $this->lastActivity = time();
-                return substr($data, 0, -$delimiterLength);
-            }
-        }
-
-        throw new DaxException('Maximum length exceeded while waiting for delimiter');
     }
 
     /**
