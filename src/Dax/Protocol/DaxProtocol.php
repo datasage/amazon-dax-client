@@ -449,16 +449,6 @@ class DaxProtocol
 
             $connection->send($authRequest);
 
-            // Read authentication response
-            $authResponse = $this->receiveResponse($connection);
-            $decodedAuthResponse = $this->decoder->decodeResponse('Auth', $authResponse);
-
-            if ($this->debugLogging) {
-                $this->logger->debug('DAX Authentication Response', [
-                    'response_size' => strlen($authResponse),
-                ]);
-            }
-
             // Record the timestamp of successful authentication
             $this->lastAuthTime = time();
 
