@@ -157,7 +157,7 @@ class DaxProtocol
     private function formatRequestForLogging(array $request): array
     {
         $formatted = [];
-        
+
         foreach ($request as $key => $value) {
             if (is_array($value)) {
                 $formatted[$key] = $this->formatArrayForLogging($value);
@@ -165,7 +165,7 @@ class DaxProtocol
                 $formatted[$key] = $value;
             }
         }
-        
+
         return $formatted;
     }
 
@@ -178,7 +178,7 @@ class DaxProtocol
     private function formatResponseForLogging(array $response): array
     {
         $formatted = [];
-        
+
         foreach ($response as $key => $value) {
             if (is_array($value)) {
                 $formatted[$key] = $this->formatArrayForLogging($value);
@@ -186,7 +186,7 @@ class DaxProtocol
                 $formatted[$key] = $value;
             }
         }
-        
+
         return $formatted;
     }
 
@@ -203,13 +203,13 @@ class DaxProtocol
         if ($currentDepth >= $maxDepth) {
             return '[TRUNCATED: Max depth reached]';
         }
-        
+
         if (count($data) > 50) {
             return '[TRUNCATED: Array too large (' . count($data) . ' items)]';
         }
-        
+
         $formatted = [];
-        
+
         foreach ($data as $key => $value) {
             if (is_array($value)) {
                 $formatted[$key] = $this->formatArrayForLogging($value, $maxDepth, $currentDepth + 1);
@@ -219,7 +219,7 @@ class DaxProtocol
                 $formatted[$key] = $value;
             }
         }
-        
+
         return $formatted;
     }
 
@@ -412,11 +412,11 @@ class DaxProtocol
         if ($this->lastAuthTime === null) {
             return true;
         }
-        
+
         // Check if auth has expired (5 minutes)
         $currentTime = time();
         $timeSinceAuth = $currentTime - $this->lastAuthTime;
-        
+
         return $timeSinceAuth >= self::AUTH_EXPIRATION_SECONDS;
     }
 
@@ -431,11 +431,11 @@ class DaxProtocol
         try {
             // Generate signature information (always uses dax.amazonaws.com as canonical host)
             $signature = $this->authenticator->generateSignature();
-            
+
             if ($this->debugLogging) {
                 $this->logger->debug('DAX Protocol Authentication', $signature);
             }
-            
+
             // Following Python implementation: send CBOR-encoded authentication
             // Method ID for authorizeConnection is 1489122155
             $authRequest = $this->encoder->encodeAuthRequest(
@@ -444,24 +444,24 @@ class DaxProtocol
                 $signature['signature'],
                 $signature['string_to_sign'],
                 $signature['token'],
-                'DaxPHPClient-1.0' // user agent
+                'DaxPHPClient-1.0', // user agent
             );
-            
+
             $connection->send($authRequest);
-            
+
             // Read authentication response
             $authResponse = $this->receiveResponse($connection);
             $decodedAuthResponse = $this->decoder->decodeResponse('Auth', $authResponse);
-            
+
             if ($this->debugLogging) {
                 $this->logger->debug('DAX Authentication Response', [
                     'response_size' => strlen($authResponse),
                 ]);
             }
-            
+
             // Record the timestamp of successful authentication
             $this->lastAuthTime = time();
-            
+
         } catch (\Exception $e) {
             throw new DaxException('Failed to send authentication: ' . $e->getMessage(), 0, $e);
         }
@@ -479,12 +479,12 @@ class DaxProtocol
         // The Go implementation uses pure CBOR format:
         // [CBOR_ERROR_ARRAY][CBOR_RESPONSE_DATA]
         // We need to read the entire CBOR stream and handle errors within the decoder
-        
+
         // Read initial bytes to determine response size
         // CBOR responses are variable length, so we need to read incrementally
         $buffer = '';
         $chunkSize = 1024; // Read in 1KB chunks
-        
+
         do {
             $chunk = $connection->receive($chunkSize);
             if ($chunk === '') {
@@ -492,7 +492,7 @@ class DaxProtocol
             }
             $buffer .= $chunk;
         } while (strlen($chunk) === $chunkSize);
-        
+
         return $buffer;
     }
 

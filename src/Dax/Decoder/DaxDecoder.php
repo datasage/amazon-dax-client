@@ -50,11 +50,11 @@ class DaxDecoder
             // [CBOR_ERROR_ARRAY][CBOR_RESPONSE_DATA]
             $decoder = Decoder::create();
             $stream = StringStream::create($response);
-            
+
             // First, decode the error array
             $errorObject = $decoder->decode($stream);
             $errorArray = $this->cborObjectToArray($errorObject);
-            
+
             // Check if there are errors
             if (is_array($errorArray) && !empty($errorArray)) {
                 // Handle error response
@@ -64,16 +64,16 @@ class DaxDecoder
                 }
                 throw new DaxException($errorMessage);
             }
-            
+
             // If no errors, try to decode the response data
             try {
                 $responseObject = $decoder->decode($stream);
                 $decoded = $this->cborObjectToArray($responseObject);
-                
+
                 if (!is_array($decoded)) {
                     throw new DaxException('Invalid response format: expected array');
                 }
-                
+
                 return $this->convertResponseAttributeValues($decoded);
             } catch (DaxException $e) {
                 // Re-throw DaxExceptions

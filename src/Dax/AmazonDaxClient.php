@@ -232,8 +232,8 @@ class AmazonDaxClient implements DaxClientInterface
         }
 
         // Require credentials to be provided and be a valid CredentialsInterface instance
-        if (!isset($this->config['credentials']) || 
-            $this->config['credentials'] === null || 
+        if (!isset($this->config['credentials']) ||
+            $this->config['credentials'] === null ||
             $this->config['credentials'] === '') {
             throw new DaxException('Credentials must be provided');
         }

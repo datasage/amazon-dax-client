@@ -25,7 +25,7 @@ class DaxEncoder
 {
     // DAX service ID constant
     private const DAX_SERVICE_ID = 1;
-    
+
     // DAX CBOR tags for DynamoDB data types
     private const TAG_DDB_STRING_SET = 3321;
     private const TAG_DDB_NUMBER_SET = 3322;
@@ -44,13 +44,13 @@ class DaxEncoder
         try {
             // Create CBOR objects for service ID and method ID
             $serviceIdObject = UnsignedIntegerObject::create(self::DAX_SERVICE_ID);
-            $methodIdObject = $methodId >= 0 ? 
-                UnsignedIntegerObject::create($methodId) : 
+            $methodIdObject = $methodId >= 0 ?
+                UnsignedIntegerObject::create($methodId) :
                 NegativeIntegerObject::create($methodId);
-            
+
             // Convert request parameters to CBOR object
             $requestObject = $this->arrayToCborObject($request);
-            
+
             // Encode all components as CBOR
             return (string) $serviceIdObject . (string) $methodIdObject . (string) $requestObject;
         } catch (\Exception $e) {
@@ -81,29 +81,29 @@ class DaxEncoder
             // self.enc.append_binary(sig.string_to_sign)
             // self.enc.append_string(token) or self.enc.append_null()
             // self.enc.append_string(user_agent) or self.enc.append_null()
-            
+
             $result = '';
-            
+
             // Service ID (1)
             $serviceIdObject = UnsignedIntegerObject::create(self::DAX_SERVICE_ID);
             $result .= (string) $serviceIdObject;
-            
+
             // Method ID (1489122155 for authorizeConnection)
             $methodIdObject = UnsignedIntegerObject::create($methodId);
             $result .= (string) $methodIdObject;
-            
+
             // Access key
             $accessKeyObject = TextStringObject::create($accessKey);
             $result .= (string) $accessKeyObject;
-            
+
             // Signature
             $signatureObject = TextStringObject::create($signature);
             $result .= (string) $signatureObject;
-            
+
             // String to sign (as binary)
             $stringToSignObject = \CBOR\ByteStringObject::create($stringToSign);
             $result .= (string) $stringToSignObject;
-            
+
             // Token (optional)
             if ($token !== null) {
                 $tokenObject = TextStringObject::create($token);
@@ -112,7 +112,7 @@ class DaxEncoder
                 $nullObject = NullObject::create();
                 $result .= (string) $nullObject;
             }
-            
+
             // User agent (optional)
             if ($userAgent !== null) {
                 $userAgentObject = TextStringObject::create($userAgent);
@@ -121,7 +121,7 @@ class DaxEncoder
                 $nullObject = NullObject::create();
                 $result .= (string) $nullObject;
             }
-            
+
             return $result;
         } catch (\Exception $e) {
             throw new DaxException('Failed to encode authentication request: ' . $e->getMessage(), 0, $e);
