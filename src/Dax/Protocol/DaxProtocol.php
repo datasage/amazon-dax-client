@@ -40,6 +40,7 @@ class DaxProtocol
         'BatchWriteItem' => 116217951,
         'Query' => 2,
         'Scan' => 3,
+        'DescribeTable' => 4,
         'DefineKeySchema' => 681,
         'DefineAttributeList' => 656,
         'DefineAttributeListId' => 657,
@@ -97,7 +98,7 @@ class DaxProtocol
         }
 
         // Prepare the request
-        $preparedRequest = $this->prepareRequest($operation, $request);
+        $preparedRequest = $this->prepareRequest($operation, $request, $connection);
 
         // Log the prepared request (only if debug logging is enabled)
         if ($this->debugLogging) {
@@ -228,27 +229,32 @@ class DaxProtocol
      *
      * @param string $operation Operation name
      * @param array $request Request parameters
+     * @param DaxConnection|null $connection DAX connection for DescribeTable calls
      * @return array Prepared request
      * @throws DaxException
      */
-    private function prepareRequest(string $operation, array $request): array
+    private function prepareRequest(string $operation, array $request, ?DaxConnection $connection = null): array
     {
         switch ($operation) {
             case 'GetItem':
             case 'PutItem':
             case 'DeleteItem':
             case 'UpdateItem':
-                return $this->prepareSingleItemRequest($request);
+                return $this->prepareSingleItemRequest($request, $connection);
 
             case 'BatchGetItem':
-                return $this->prepareBatchGetRequest($request);
+                return $this->prepareBatchGetRequest($request, $connection);
 
             case 'BatchWriteItem':
-                return $this->prepareBatchWriteRequest($request);
+                return $this->prepareBatchWriteRequest($request, $connection);
 
             case 'Query':
             case 'Scan':
                 return $this->prepareQueryScanRequest($request);
+
+            case 'DescribeTable':
+                // DescribeTable doesn't need key validation, just return as-is
+                return $request;
 
             default:
                 return $request;
@@ -259,9 +265,10 @@ class DaxProtocol
      * Prepare a single item request
      *
      * @param array $request Request parameters
+     * @param DaxConnection|null $connection DAX connection for DescribeTable calls
      * @return array Prepared request
      */
-    private function prepareSingleItemRequest(array $request): array
+    private function prepareSingleItemRequest(array $request, ?DaxConnection $connection = null): array
     {
         // Ensure table name is present
         if (!isset($request['TableName'])) {
@@ -269,7 +276,7 @@ class DaxProtocol
         }
 
         // Get and validate key schema if available
-        $keySchema = $this->getKeySchema($request['TableName']);
+        $keySchema = $this->getKeySchema($request['TableName'], $connection);
 
         // Convert attribute values to DAX format
         if (isset($request['Key'])) {
@@ -300,9 +307,10 @@ class DaxProtocol
      * Prepare a batch get request
      *
      * @param array $request Request parameters
+     * @param DaxConnection|null $connection DAX connection for DescribeTable calls
      * @return array Prepared request
      */
-    private function prepareBatchGetRequest(array $request): array
+    private function prepareBatchGetRequest(array $request, ?DaxConnection $connection = null): array
     {
         if (!isset($request['RequestItems'])) {
             throw new DaxException('RequestItems is required');
@@ -311,7 +319,7 @@ class DaxProtocol
         foreach ($request['RequestItems'] as $tableName => &$tableRequest) {
             if (isset($tableRequest['Keys'])) {
                 // Get key schema for validation
-                $keySchema = $this->getKeySchema($tableName);
+                $keySchema = $this->getKeySchema($tableName, $connection);
 
                 foreach ($tableRequest['Keys'] as &$key) {
                     $key = $this->convertAttributeValues($key);
@@ -331,9 +339,10 @@ class DaxProtocol
      * Prepare a batch write request
      *
      * @param array $request Request parameters
+     * @param DaxConnection|null $connection DAX connection for DescribeTable calls
      * @return array Prepared request
      */
-    private function prepareBatchWriteRequest(array $request): array
+    private function prepareBatchWriteRequest(array $request, ?DaxConnection $connection = null): array
     {
         if (!isset($request['RequestItems'])) {
             throw new DaxException('RequestItems is required');
@@ -341,7 +350,7 @@ class DaxProtocol
 
         foreach ($request['RequestItems'] as $tableName => &$writeRequests) {
             // Get key schema for validation
-            $keySchema = $this->getKeySchema($tableName);
+            $keySchema = $this->getKeySchema($tableName, $connection);
 
             foreach ($writeRequests as &$writeRequest) {
                 if (isset($writeRequest['PutRequest']['Item'])) {
@@ -529,9 +538,10 @@ class DaxProtocol
      * Get key schema for a table from cache or retrieve it
      *
      * @param string $tableName Table name
+     * @param DaxConnection|null $connection DAX connection for DescribeTable calls
      * @return array|null Key schema or null if not available
      */
-    private function getKeySchema(string $tableName): ?array
+    private function getKeySchema(string $tableName, ?DaxConnection $connection = null): ?array
     {
         if (!$this->keySchemaCache) {
             return null;
@@ -543,10 +553,56 @@ class DaxProtocol
             return $keySchema;
         }
 
-        // If not in cache, try to retrieve it (this would typically involve a DescribeTable call)
-        // For now, we'll return null and let the operation proceed without validation
-        // In a full implementation, this would make a DescribeTable call to DAX
+        // If not in cache and we have a connection, try to retrieve it via DescribeTable
+        if ($connection !== null) {
+            try {
+                $describeRequest = ['TableName' => $tableName];
+                $response = $this->executeRequest($connection, 'DescribeTable', $describeRequest);
+
+                // Extract key schema from DescribeTable response
+                if (isset($response['Table']['KeySchema'])) {
+                    $keySchema = $this->extractKeySchemaFromDescribeTable($response['Table']['KeySchema']);
+
+                    // Cache the key schema for future use
+                    $this->cacheKeySchema($tableName, $keySchema);
+
+                    return $keySchema;
+                }
+            } catch (\Exception $e) {
+                // Log the error but don't fail the operation
+                $this->logger->warning("Failed to retrieve key schema for table '{$tableName}': " . $e->getMessage());
+            }
+        }
+
+        // Return null if we couldn't retrieve the key schema
         return null;
+    }
+
+    /**
+     * Extract key schema from DescribeTable response
+     *
+     * @param array $keySchemaResponse KeySchema from DescribeTable response
+     * @return array Internal key schema format
+     */
+    private function extractKeySchemaFromDescribeTable(array $keySchemaResponse): array
+    {
+        $keySchema = [];
+
+        foreach ($keySchemaResponse as $keyElement) {
+            if ($keyElement['KeyType'] === 'HASH') {
+                $keySchema['HashKeyElement'] = [
+                    'AttributeName' => $keyElement['AttributeName'],
+                    'AttributeType' => 'S', // Default to string, could be enhanced to get actual type
+                ];
+            } elseif ($keyElement['KeyType'] === 'RANGE') {
+                $keySchema['RangeKeyElement'] = [
+                    'AttributeName' => $keyElement['AttributeName'],
+                    'AttributeType' => 'S', // Default to string, could be enhanced to get actual type
+                ];
+            }
+        }
+
+        return $keySchema;
     }
 
     /**

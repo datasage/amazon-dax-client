@@ -183,6 +183,20 @@ class AmazonDaxClient implements DaxClientInterface
     /**
      * {@inheritdoc}
      */
+    public function describeTable(string $tableName): array
+    {
+        $this->ensureNotClosed();
+
+        $request = [
+            'TableName' => $tableName,
+        ];
+
+        return $this->executeRequest('DescribeTable', $request);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function close(): void
     {
         if (!$this->closed) {

@@ -52,6 +52,68 @@ class DaxProtocolKeySchemaTest extends TestCase
         $this->assertNull($result);
     }
 
+    public function testExtractKeySchemaFromDescribeTable(): void
+    {
+        // Test with hash key only
+        $describeTableResponse = [
+            [
+                'AttributeName' => 'id',
+                'KeyType' => 'HASH',
+            ],
+        ];
+
+        // Use reflection to call the private method for testing
+        $reflection = new \ReflectionClass($this->protocol);
+        $method = $reflection->getMethod('extractKeySchemaFromDescribeTable');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($this->protocol, $describeTableResponse);
+
+        $expected = [
+            'HashKeyElement' => [
+                'AttributeName' => 'id',
+                'AttributeType' => 'S',
+            ],
+        ];
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function testExtractKeySchemaFromDescribeTableWithRangeKey(): void
+    {
+        // Test with hash and range key
+        $describeTableResponse = [
+            [
+                'AttributeName' => 'id',
+                'KeyType' => 'HASH',
+            ],
+            [
+                'AttributeName' => 'sort',
+                'KeyType' => 'RANGE',
+            ],
+        ];
+
+        // Use reflection to call the private method for testing
+        $reflection = new \ReflectionClass($this->protocol);
+        $method = $reflection->getMethod('extractKeySchemaFromDescribeTable');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($this->protocol, $describeTableResponse);
+
+        $expected = [
+            'HashKeyElement' => [
+                'AttributeName' => 'id',
+                'AttributeType' => 'S',
+            ],
+            'RangeKeyElement' => [
+                'AttributeName' => 'sort',
+                'AttributeType' => 'S',
+            ],
+        ];
+
+        $this->assertEquals($expected, $result);
+    }
+
     public function testValidateKeyWithHashKeyOnly(): void
     {
         $tableName = 'HashOnlyTable';

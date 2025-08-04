@@ -179,6 +179,23 @@ class AmazonDaxClientTest extends TestCase
         $client->batchWriteItem(['TestTable' => [['PutRequest' => ['Item' => ['id' => ['S' => 'test']]]]]]);
     }
 
+    public function testDescribeTableThrowsExceptionWhenClosed(): void
+    {
+        $config = [
+            'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
+            'region' => 'us-east-1',
+            'credentials' => $this->createMockCredentials(),
+        ];
+
+        $client = new AmazonDaxClient($config);
+        $client->close();
+
+        $this->expectException(DaxException::class);
+        $this->expectExceptionMessage('Client has been closed');
+
+        $client->describeTable('TestTable');
+    }
+
     public function testQueryThrowsExceptionWhenClosed(): void
     {
         $config = [

@@ -84,6 +84,14 @@ interface DaxClientInterface
     public function updateItem(string $tableName, array $key, array $options = []): array;
 
     /**
+     * Describe a table and get its metadata
+     *
+     * @param string $tableName Name of the table
+     * @return array Response containing table metadata including key schema
+     */
+    public function describeTable(string $tableName): array;
+
+    /**
      * Close the client and clean up resources
      */
     public function close(): void;
