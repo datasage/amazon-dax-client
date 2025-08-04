@@ -99,7 +99,7 @@ class DaxAuthenticator
      * @return array{access_key: string, signature: string, string_to_sign: string, token: string|null} Signature information
      * @throws DaxException
      */
-    public function generateSignature(string $host, string $payload): array
+    public function generateSignature(string $payload = ''): array
     {
         try {
             $credentials = $this->getCredentials();
@@ -139,7 +139,6 @@ class DaxAuthenticator
                 'signature' => $signature,
                 'string_to_sign' => $stringToSign,
                 'token' => $credentials->getSecurityToken(),
-                'host' => $host
             ];
         } catch (\Exception $e) {
             throw new DaxException('Failed to generate signature: ' . $e->getMessage(), 0, $e);

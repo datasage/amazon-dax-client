@@ -429,17 +429,11 @@ class DaxProtocol
     private function sendAuthentication(DaxConnection $connection): void
     {
         try {
-            $endpoint = $connection->getEndpoint();
-            $host = $endpoint['host'] . ':' . $endpoint['port'];
-            
             // Generate signature information
-            $signature = $this->authenticator->generateSignature($host, '');
+            $signature = $this->authenticator->generateSignature();
             
             if ($this->debugLogging) {
-                $this->logger->debug('DAX Protocol Authentication', [
-                    'host' => $host,
-                    'access_key' => substr($signature['access_key'] ?? '', 0, 8) . '...',
-                ]);
+                $this->logger->debug('DAX Protocol Authentication', $signature);
             }
             
             // Following Python implementation: send CBOR-encoded authentication
