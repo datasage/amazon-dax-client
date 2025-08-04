@@ -96,7 +96,7 @@ class DaxAuthenticator
      *
      * @param string $host DAX endpoint host
      * @param string $payload Request payload
-     * @return array{access_key: string, signature: string, string_to_sign: string, token: string|null, host: string} Signature information
+     * @return array{access_key: string, signature: string, string_to_sign: string, token: string|null} Signature information
      * @throws DaxException
      */
     public function generateSignature(string $host, string $payload): array
@@ -107,9 +107,9 @@ class DaxAuthenticator
             // Create a PSR-7 request for signing
             $request = new Request(
                 'POST',
-                'https://dax.amazonaws.com/',
+                'https://dax.amazonaws.com',
                 [
-                    'Host' => $host,
+                    'Host' => 'https://dax.amazonaws.com',
                     'Content-Type' => 'application/x-amz-cbor-1.1'
                 ],
                 $payload

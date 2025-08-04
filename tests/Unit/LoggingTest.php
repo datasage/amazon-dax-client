@@ -2,6 +2,7 @@
 
 namespace Dax\Tests\Unit;
 
+use Aws\Credentials\Credentials;
 use Dax\AmazonDaxClient;
 use Dax\Connection\ClusterManager;
 use Monolog\Handler\TestHandler;
@@ -21,11 +22,20 @@ class LoggingTest extends TestCase
         $this->logger->pushHandler($this->testHandler);
     }
 
+    /**
+     * Create mock credentials for testing
+     */
+    private function createMockCredentials(): Credentials
+    {
+        return new Credentials('test-access-key', 'test-secret-key', 'test-session-token');
+    }
+
     public function testAmazonDaxClientAcceptsLogger(): void
     {
         $config = [
             'region' => 'us-east-1',
             'endpoints' => ['dax://test-cluster.abc123.dax-clusters.us-east-1.amazonaws.com:8111'],
+            'credentials' => $this->createMockCredentials(),
             'logger' => $this->logger,
         ];
 
@@ -44,6 +54,7 @@ class LoggingTest extends TestCase
         $config = [
             'region' => 'us-east-1',
             'endpoints' => ['dax://test-cluster.abc123.dax-clusters.us-east-1.amazonaws.com:8111'],
+            'credentials' => $this->createMockCredentials(),
         ];
 
         // This should not throw an exception and should use NullLogger

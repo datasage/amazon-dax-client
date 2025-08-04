@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Dax\Tests\Unit;
 
+use Aws\Credentials\Credentials;
 use Dax\AmazonDaxClient;
 use Dax\Exception\DaxException;
 use PHPUnit\Framework\TestCase;
@@ -13,11 +14,19 @@ use PHPUnit\Framework\TestCase;
  */
 class AmazonDaxClientTest extends TestCase
 {
+    /**
+     * Create mock credentials for testing
+     */
+    private function createMockCredentials(): Credentials
+    {
+        return new Credentials('test-access-key', 'test-secret-key', 'test-session-token');
+    }
     public function testConstructorWithValidConfig(): void
     {
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
             'region' => 'us-east-1',
+            'credentials' => $this->createMockCredentials(),
         ];
 
         $client = new AmazonDaxClient($config);
@@ -29,6 +38,7 @@ class AmazonDaxClientTest extends TestCase
         $config = [
             'endpoints' => ['dax://node1.cluster.dax-clusters.us-east-1.amazonaws.com'],
             'region' => 'us-east-1',
+            'credentials' => $this->createMockCredentials(),
         ];
 
         $client = new AmazonDaxClient($config);
@@ -60,6 +70,7 @@ class AmazonDaxClientTest extends TestCase
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
             'region' => 'us-east-1',
+            'credentials' => $this->createMockCredentials(),
         ];
 
         $client = AmazonDaxClient::factory($config);
@@ -71,6 +82,7 @@ class AmazonDaxClientTest extends TestCase
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
             'region' => 'us-east-1',
+            'credentials' => $this->createMockCredentials(),
         ];
 
         $client = new AmazonDaxClient($config);
@@ -87,6 +99,7 @@ class AmazonDaxClientTest extends TestCase
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
             'region' => 'us-east-1',
+            'credentials' => $this->createMockCredentials(),
         ];
 
         $client = new AmazonDaxClient($config);
@@ -103,6 +116,7 @@ class AmazonDaxClientTest extends TestCase
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
             'region' => 'us-east-1',
+            'credentials' => $this->createMockCredentials(),
         ];
 
         $client = new AmazonDaxClient($config);
@@ -119,6 +133,7 @@ class AmazonDaxClientTest extends TestCase
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
             'region' => 'us-east-1',
+            'credentials' => $this->createMockCredentials(),
         ];
 
         $client = new AmazonDaxClient($config);
@@ -135,6 +150,7 @@ class AmazonDaxClientTest extends TestCase
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
             'region' => 'us-east-1',
+            'credentials' => $this->createMockCredentials(),
         ];
 
         $client = new AmazonDaxClient($config);
@@ -151,6 +167,7 @@ class AmazonDaxClientTest extends TestCase
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
             'region' => 'us-east-1',
+            'credentials' => $this->createMockCredentials(),
         ];
 
         $client = new AmazonDaxClient($config);
@@ -167,6 +184,7 @@ class AmazonDaxClientTest extends TestCase
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
             'region' => 'us-east-1',
+            'credentials' => $this->createMockCredentials(),
         ];
 
         $client = new AmazonDaxClient($config);
@@ -183,6 +201,7 @@ class AmazonDaxClientTest extends TestCase
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
             'region' => 'us-east-1',
+            'credentials' => $this->createMockCredentials(),
         ];
 
         $client = new AmazonDaxClient($config);
@@ -199,6 +218,7 @@ class AmazonDaxClientTest extends TestCase
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
             'region' => 'us-east-1',
+            'credentials' => $this->createMockCredentials(),
         ];
 
         $client = new AmazonDaxClient($config);
@@ -212,6 +232,7 @@ class AmazonDaxClientTest extends TestCase
     {
         $config = [
             'endpoint_url' => 'dax://test.cluster.dax-clusters.us-east-1.amazonaws.com',
+            'credentials' => $this->createMockCredentials(),
         ];
 
         $client = new AmazonDaxClient($config);
