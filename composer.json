@@ -28,7 +28,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Dax\\": "src/"
+            "Dax\\": "src/Dax/"
         }
     },
     "autoload-dev": {
