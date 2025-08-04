@@ -15,7 +15,7 @@ class DaxConnection
 {
     private const MAGIC = 'J7yne5G';
     public const USER_AGENT = 'DaxPHPClient-1.0';
-    
+
     private array $endpoint;
     private array $config;
     private DaxEncoder $encoder;
@@ -88,7 +88,7 @@ class DaxConnection
 
         $this->connected = true;
         $this->lastActivity = time();
-        
+
         // Send initial handshake packets as per Go implementation
         $this->sendInitialHandshake();
     }
@@ -105,29 +105,29 @@ class DaxConnection
             // 1. Send magic string "J7yne5G"
             $magicObject = $this->encoder->arrayToCborObject(self::MAGIC);
             $this->sendCborObject($magicObject);
-            
+
             // 2. Send layering (0)
             $layeringObject = $this->encoder->arrayToCborObject(0);
             $this->sendCborObject($layeringObject);
-            
+
             // 3. Send session ID as string
             $sessionObject = $this->encoder->arrayToCborObject((string) $this->sessionId);
             $this->sendCborObject($sessionObject);
-            
+
             // 4. Send header map with UserAgent
             $headerMap = ['UserAgent' => self::USER_AGENT];
             $headerObject = $this->encoder->arrayToCborObject($headerMap);
             $this->sendCborObject($headerObject);
-            
+
             // 5. Send client mode (0)
             $clientModeObject = $this->encoder->arrayToCborObject(0);
             $this->sendCborObject($clientModeObject);
-            
+
         } catch (\Exception $e) {
             throw new DaxException('Failed to send initial handshake: ' . $e->getMessage(), 0, $e);
         }
     }
-    
+
     /**
      * Send a CBOR object over the socket
      *

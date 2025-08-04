@@ -268,13 +268,29 @@ class DaxProtocol
             throw new DaxException('TableName is required');
         }
 
+        // Get and validate key schema if available
+        $keySchema = $this->getKeySchema($request['TableName']);
+
         // Convert attribute values to DAX format
         if (isset($request['Key'])) {
             $request['Key'] = $this->convertAttributeValues($request['Key']);
+
+            // Validate key against schema if available
+            if ($keySchema) {
+                $this->validateKey($request['Key'], $keySchema, $request['TableName']);
+            }
         }
 
         if (isset($request['Item'])) {
             $request['Item'] = $this->convertAttributeValues($request['Item']);
+
+            // Validate item key against schema if available
+            if ($keySchema) {
+                $itemKey = $this->extractKeyFromItem($request['Item'], $keySchema);
+                if ($itemKey) {
+                    $this->validateKey($itemKey, $keySchema, $request['TableName']);
+                }
+            }
         }
 
         return $request;
@@ -294,8 +310,16 @@ class DaxProtocol
 
         foreach ($request['RequestItems'] as $tableName => &$tableRequest) {
             if (isset($tableRequest['Keys'])) {
+                // Get key schema for validation
+                $keySchema = $this->getKeySchema($tableName);
+
                 foreach ($tableRequest['Keys'] as &$key) {
                     $key = $this->convertAttributeValues($key);
+
+                    // Validate key against schema if available
+                    if ($keySchema) {
+                        $this->validateKey($key, $keySchema, $tableName);
+                    }
                 }
             }
         }
@@ -316,12 +340,28 @@ class DaxProtocol
         }
 
         foreach ($request['RequestItems'] as $tableName => &$writeRequests) {
+            // Get key schema for validation
+            $keySchema = $this->getKeySchema($tableName);
+
             foreach ($writeRequests as &$writeRequest) {
                 if (isset($writeRequest['PutRequest']['Item'])) {
                     $writeRequest['PutRequest']['Item'] = $this->convertAttributeValues($writeRequest['PutRequest']['Item']);
+
+                    // Validate item key against schema if available
+                    if ($keySchema) {
+                        $itemKey = $this->extractKeyFromItem($writeRequest['PutRequest']['Item'], $keySchema);
+                        if ($itemKey) {
+                            $this->validateKey($itemKey, $keySchema, $tableName);
+                        }
+                    }
                 }
                 if (isset($writeRequest['DeleteRequest']['Key'])) {
                     $writeRequest['DeleteRequest']['Key'] = $this->convertAttributeValues($writeRequest['DeleteRequest']['Key']);
+
+                    // Validate key against schema if available
+                    if ($keySchema) {
+                        $this->validateKey($writeRequest['DeleteRequest']['Key'], $keySchema, $tableName);
+                    }
                 }
             }
         }
@@ -485,5 +525,131 @@ class DaxProtocol
         return $buffer;
     }
 
+    /**
+     * Get key schema for a table from cache or retrieve it
+     *
+     * @param string $tableName Table name
+     * @return array|null Key schema or null if not available
+     */
+    private function getKeySchema(string $tableName): ?array
+    {
+        if (!$this->keySchemaCache) {
+            return null;
+        }
 
+        // Try to get from cache first
+        $keySchema = $this->keySchemaCache->get($tableName);
+        if ($keySchema !== null) {
+            return $keySchema;
+        }
+
+        // If not in cache, try to retrieve it (this would typically involve a DescribeTable call)
+        // For now, we'll return null and let the operation proceed without validation
+        // In a full implementation, this would make a DescribeTable call to DAX
+        return null;
+    }
+
+    /**
+     * Validate a key against the table's key schema
+     *
+     * @param array $key Key to validate
+     * @param array $keySchema Key schema
+     * @param string $tableName Table name for error messages
+     * @throws DaxException If key is invalid
+     */
+    private function validateKey(array $key, array $keySchema, string $tableName): void
+    {
+        // Validate hash key
+        if (isset($keySchema['HashKeyElement'])) {
+            $hashKeyName = $keySchema['HashKeyElement']['AttributeName'];
+            if (!isset($key[$hashKeyName])) {
+                throw new DaxException("Missing hash key '{$hashKeyName}' for table '{$tableName}'");
+            }
+        }
+
+        // Validate range key if present in schema
+        if (isset($keySchema['RangeKeyElement'])) {
+            $rangeKeyName = $keySchema['RangeKeyElement']['AttributeName'];
+            if (!isset($key[$rangeKeyName])) {
+                throw new DaxException("Missing range key '{$rangeKeyName}' for table '{$tableName}'");
+            }
+        }
+
+        // Validate that no extra attributes are present in the key
+        $allowedKeys = [];
+        if (isset($keySchema['HashKeyElement'])) {
+            $allowedKeys[] = $keySchema['HashKeyElement']['AttributeName'];
+        }
+        if (isset($keySchema['RangeKeyElement'])) {
+            $allowedKeys[] = $keySchema['RangeKeyElement']['AttributeName'];
+        }
+
+        foreach (array_keys($key) as $keyName) {
+            if (!in_array($keyName, $allowedKeys)) {
+                throw new DaxException("Invalid key attribute '{$keyName}' for table '{$tableName}'. Only key attributes are allowed.");
+            }
+        }
+    }
+
+    /**
+     * Extract key attributes from an item based on key schema
+     *
+     * @param array $item Item data
+     * @param array $keySchema Key schema
+     * @return array|null Key attributes or null if key cannot be extracted
+     */
+    private function extractKeyFromItem(array $item, array $keySchema): ?array
+    {
+        $key = [];
+
+        // Extract hash key
+        if (isset($keySchema['HashKeyElement'])) {
+            $hashKeyName = $keySchema['HashKeyElement']['AttributeName'];
+            if (isset($item[$hashKeyName])) {
+                $key[$hashKeyName] = $item[$hashKeyName];
+            } else {
+                return null; // Cannot extract key without hash key
+            }
+        }
+
+        // Extract range key if present
+        if (isset($keySchema['RangeKeyElement'])) {
+            $rangeKeyName = $keySchema['RangeKeyElement']['AttributeName'];
+            if (isset($item[$rangeKeyName])) {
+                $key[$rangeKeyName] = $item[$rangeKeyName];
+            } else {
+                return null; // Cannot extract key without range key
+            }
+        }
+
+        return empty($key) ? null : $key;
+    }
+
+    /**
+     * Store key schema in cache
+     *
+     * @param string $tableName Table name
+     * @param array $keySchema Key schema
+     */
+    public function cacheKeySchema(string $tableName, array $keySchema): void
+    {
+        if ($this->keySchemaCache) {
+            $this->keySchemaCache->put($tableName, $keySchema);
+        }
+    }
+
+    /**
+     * Get cached key schema for a table
+     *
+     * @param string $tableName Table name
+     * @return array|null Key schema or null if not cached
+     */
+    public function getCachedKeySchema(string $tableName): ?array
+    {
+        if (!$this->keySchemaCache) {
+            return null;
+        }
+
+        return $this->keySchemaCache->get($tableName);
+    }
 }
