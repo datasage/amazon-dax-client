@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Dax\Connection;
 
+use Dax\Encoder\DaxEncoder;
 use Dax\Exception\DaxException;
 
 /**

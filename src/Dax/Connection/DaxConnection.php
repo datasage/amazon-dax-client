@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Dax\Connection;
 
+use Dax\Encoder\DaxEncoder;
 use Dax\Exception\DaxException;
 
 /**
@@ -11,23 +12,31 @@ use Dax\Exception\DaxException;
  */
 class DaxConnection
 {
+    private const MAGIC = 'J7yne5G';
+    private const USER_AGENT = 'DaxPHPClient-1.0';
+    
     private array $endpoint;
     private array $config;
+    private DaxEncoder $encoder;
     private $socket = null;
     private bool $connected = false;
     private int $lastActivity;
     private int $requestCount = 0;
+    private int $sessionId;
 
     /**
      * Constructor
      *
      * @param array $endpoint Endpoint configuration
      * @param array $config Connection configuration
+     * @param DaxEncoder|null $encoder CBOR encoder (optional, will create new if not provided)
      */
-    public function __construct(array $endpoint, array $config)
+    public function __construct(array $endpoint, array $config, ?DaxEncoder $encoder = null)
     {
         $this->endpoint = $endpoint;
         $this->config = $config;
+        $this->encoder = $encoder ?? new DaxEncoder();
+        $this->sessionId = time() * 1000 + random_int(0, 999); // Generate unique session ID
         $this->lastActivity = time();
     }
 
@@ -77,6 +86,59 @@ class DaxConnection
 
         $this->connected = true;
         $this->lastActivity = time();
+        
+        // Send initial handshake packets as per Go implementation
+        $this->sendInitialHandshake();
+    }
+
+    /**
+     * Send initial handshake packets as per Go implementation
+     * Sends: magic, layering, session, header, client mode
+     *
+     * @throws DaxException
+     */
+    private function sendInitialHandshake(): void
+    {
+        try {
+            // 1. Send magic string "J7yne5G"
+            $magicObject = $this->encoder->arrayToCborObject(self::MAGIC);
+            $this->sendCborObject($magicObject);
+            
+            // 2. Send layering (0)
+            $layeringObject = $this->encoder->arrayToCborObject(0);
+            $this->sendCborObject($layeringObject);
+            
+            // 3. Send session ID as string
+            $sessionObject = $this->encoder->arrayToCborObject((string) $this->sessionId);
+            $this->sendCborObject($sessionObject);
+            
+            // 4. Send header map with UserAgent
+            $headerMap = ['UserAgent' => self::USER_AGENT];
+            $headerObject = $this->encoder->arrayToCborObject($headerMap);
+            $this->sendCborObject($headerObject);
+            
+            // 5. Send client mode (0)
+            $clientModeObject = $this->encoder->arrayToCborObject(0);
+            $this->sendCborObject($clientModeObject);
+            
+        } catch (\Exception $e) {
+            throw new DaxException('Failed to send initial handshake: ' . $e->getMessage(), 0, $e);
+        }
+    }
+    
+    /**
+     * Send a CBOR object over the socket
+     *
+     * @param \CBOR\CBORObject $cborObject CBOR object to send
+     * @throws DaxException
+     */
+    private function sendCborObject(\CBOR\CBORObject $cborObject): void
+    {
+        $data = $cborObject->__toString();
+        $written = fwrite($this->socket, $data);
+        if ($written === false || $written !== strlen($data)) {
+            throw new DaxException('Failed to send CBOR data to DAX node');
+        }
     }
 
     /**
