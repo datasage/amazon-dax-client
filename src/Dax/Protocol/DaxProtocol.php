@@ -27,6 +27,8 @@ class DaxProtocol
     private LoggerInterface $logger;
     private bool $debugLogging;
     private ?DaxAuthenticator $authenticator;
+    private ?int $lastAuthTime = null;
+    private const AUTH_EXPIRATION_SECONDS = 300; // 5 minutes
 
     // DAX Method IDs (simplified subset from Python client)
     private const METHOD_IDS = [
@@ -112,8 +114,8 @@ class DaxProtocol
             ]);
         }
 
-        // Send authentication if authenticator is available
-        if ($this->authenticator) {
+        // Send authentication if authenticator is available and auth has expired or not been sent yet
+        if ($this->authenticator && $this->isAuthExpired()) {
             $this->sendAuthentication($connection);
         }
 
@@ -400,6 +402,25 @@ class DaxProtocol
     }
 
     /**
+     * Check if authentication has expired or hasn't been sent yet
+     *
+     * @return bool True if auth has expired or not been sent, false otherwise
+     */
+    private function isAuthExpired(): bool
+    {
+        // If auth has never been sent, it's considered expired
+        if ($this->lastAuthTime === null) {
+            return true;
+        }
+        
+        // Check if auth has expired (5 minutes)
+        $currentTime = time();
+        $timeSinceAuth = $currentTime - $this->lastAuthTime;
+        
+        return $timeSinceAuth >= self::AUTH_EXPIRATION_SECONDS;
+    }
+
+    /**
      * Send authentication request using CBOR encoding
      *
      * @param DaxConnection $connection DAX connection
@@ -443,6 +464,9 @@ class DaxProtocol
                     'response_size' => strlen($authResponse),
                 ]);
             }
+            
+            // Record the timestamp of successful authentication
+            $this->lastAuthTime = time();
             
         } catch (\Exception $e) {
             throw new DaxException('Failed to send authentication: ' . $e->getMessage(), 0, $e);
